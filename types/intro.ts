@@ -6,7 +6,8 @@ export type IntroStep =
   | { type: "cover"; list: string[]; ms: number }
   | { type: "explode"; ms: number }
   | { type: "slam"; interval: number; impact: number }
-  | { type: "unslam" };
+  | { type: "unslam" }
+  | { type: "retype"; phrase: number };
 
 export interface IntroEmoji {
   src: string;
@@ -30,6 +31,7 @@ export interface IntroFrame {
   exploding: boolean;
   hideText: boolean;
   plain: boolean;
+  freeText: string | null;
   slam: number | null;
   impacts: number;
   done: boolean;

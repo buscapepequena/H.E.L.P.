@@ -21,7 +21,10 @@ export const SLAM_PIECES: SlamPiece[] = [
 export const INTRO_PHRASES: string[][] = [
   ["Housing ", "Enterprise for the ", "Less ", "Privileged"],
   ["Human–", "Engineered ", "Language ", "Platform"],
-  ["Here ", "Exist ", "Leverageable ", "Primitives"],
+  ["Here ", "Exist ", "Leverage ", "Primitives"],
+  ["Here ", "Exists ", "Lift ", "Potential"],
+  ["Here ", "Exists ", "Limited ", "Partnerships"],
+  ["Here ", "Exists ", "Liquidity ", "Provisions"],
 ];
 
 export const EMOJI_IMAGES: string[] = [
@@ -53,6 +56,12 @@ export const INTRO_STEPS: IntroStep[] = [
   { type: "collapse" },
   { type: "hold", ms: 700 },
   { type: "expand", phrase: 2 },
+  { type: "hold", ms: 1500 },
+  { type: "retype", phrase: 3 },
+  { type: "hold", ms: 1500 },
+  { type: "retype", phrase: 4 },
+  { type: "hold", ms: 1500 },
+  { type: "retype", phrase: 5 },
   { type: "hold", ms: 2600 },
 ];
 
@@ -60,6 +69,16 @@ export const INTRO_TIMING = {
   dot: 85,
   type: 45,
   erase: 22,
+  backspace: 38,
+};
+
+export const retypeKeep = (current: string, target: string): number => {
+  let p = 0;
+  while (p < current.length && p < target.length && current[p] === target[p]) p++;
+  if (p < current.length && current[p] !== " ") {
+    p = current.lastIndexOf(" ", p - 1) + 1;
+  }
+  return p;
 };
 
 export const tokenize = (parts: string[]): IntroToken[] => {

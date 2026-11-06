@@ -219,6 +219,173 @@ export const playBoom = () => {
   }
 };
 
+export const makeHall = (
+  ctx: BaseAudioContext,
+  seconds: number,
+): ConvolverNode => {
+  const length = Math.floor(ctx.sampleRate * seconds);
+  const impulse = ctx.createBuffer(2, length, ctx.sampleRate);
+  for (let c = 0; c < 2; c++) {
+    const channel = impulse.getChannelData(c);
+    for (let i = 0; i < length; i++) {
+      channel[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 2.8);
+    }
+  }
+  const hall = ctx.createConvolver();
+  hall.buffer = impulse;
+  return hall;
+};
+
+export const playJourney = (duration = 8) => {
+  const ctx = getContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  const end = now + duration;
+  const pace = duration / 5;
+
+  const hall = makeHall(ctx, 4.2);
+  const wet = ctx.createGain();
+  wet.gain.value = 0.85;
+  const dry = ctx.createGain();
+  dry.gain.value = 0.55;
+  hall.connect(wet).connect(ctx.destination);
+  dry.connect(ctx.destination);
+  const send = ctx.createGain();
+  send.connect(hall);
+  send.connect(dry);
+
+  const pad = ctx.createBiquadFilter();
+  pad.type = "lowpass";
+  pad.frequency.setValueAtTime(240, now);
+  pad.frequency.exponentialRampToValueAtTime(1500, now + duration * 0.6);
+  pad.frequency.exponentialRampToValueAtTime(420, end);
+  const padGain = ctx.createGain();
+  padGain.gain.setValueAtTime(0.0001, now);
+  padGain.gain.exponentialRampToValueAtTime(0.1, now + duration * 0.45);
+  padGain.gain.exponentialRampToValueAtTime(0.0001, end);
+  pad.connect(padGain).connect(send);
+  [146.83, 220, 293.66, 329.63, 440].forEach((freq, i) => {
+    [-3, 3].forEach((cents) => {
+      const osc = ctx.createOscillator();
+      osc.type = i % 2 ? "sine" : "triangle";
+      osc.frequency.value = freq;
+      osc.detune.value = cents;
+      osc.connect(pad);
+      osc.start(now);
+      osc.stop(end + 0.05);
+    });
+  });
+
+  const voice = ctx.createOscillator();
+  voice.type = "sawtooth";
+  voice.frequency.setValueAtTime(587.33, now + 1.4 * pace);
+  voice.frequency.linearRampToValueAtTime(659.25, now + 3.2 * pace);
+  const vibrato = ctx.createOscillator();
+  const vibratoDepth = ctx.createGain();
+  vibrato.frequency.value = 4.6;
+  vibratoDepth.gain.value = 5;
+  vibrato.connect(vibratoDepth).connect(voice.frequency);
+  const voiceGain = ctx.createGain();
+  voiceGain.gain.setValueAtTime(0.0001, now + 1.4 * pace);
+  voiceGain.gain.exponentialRampToValueAtTime(0.05, now + 2.8 * pace);
+  voiceGain.gain.exponentialRampToValueAtTime(0.0001, end - 0.3);
+  [
+    [750, 7],
+    [1150, 9],
+  ].forEach(([freq, q]) => {
+    const formant = ctx.createBiquadFilter();
+    formant.type = "bandpass";
+    formant.frequency.value = freq;
+    formant.Q.value = q;
+    voice.connect(formant).connect(voiceGain);
+  });
+  voiceGain.connect(send);
+  voice.start(now + 1.4 * pace);
+  vibrato.start(now + 1.4 * pace);
+  voice.stop(end);
+  vibrato.stop(end);
+
+  [
+    [0.1, 587.33],
+    [0.95, 880],
+    [1.75, 739.99],
+    [2.7, 987.77],
+    [3.75, 659.25],
+  ].forEach(([at, freq]) => {
+    const t = now + at * pace;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.16, t + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 2.1);
+    gain.connect(send);
+    [
+      [1, "triangle", 1],
+      [2, "sine", 0.28],
+    ].forEach(([ratio, type, level]) => {
+      const osc = ctx.createOscillator();
+      const part = ctx.createGain();
+      osc.type = type as OscillatorType;
+      osc.frequency.value = freq * (ratio as number);
+      part.gain.value = level as number;
+      osc.connect(part).connect(gain);
+      osc.start(t);
+      osc.stop(t + 2.2);
+    });
+  });
+};
+
+export const playFall = (duration = 5) => {
+  const ctx = getContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  const end = now + duration;
+
+  const length = Math.floor(ctx.sampleRate * duration);
+  const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+  const channel = buffer.getChannelData(0);
+  for (let i = 0; i < length; i++) channel[i] = Math.random() * 2 - 1;
+  const noise = ctx.createBufferSource();
+  noise.buffer = buffer;
+  const low = ctx.createBiquadFilter();
+  low.type = "lowpass";
+  low.frequency.setValueAtTime(3200, now);
+  low.frequency.exponentialRampToValueAtTime(160, end);
+  const air = ctx.createGain();
+  air.gain.setValueAtTime(0.0001, now);
+  air.gain.exponentialRampToValueAtTime(0.09, now + 0.8);
+  air.gain.exponentialRampToValueAtTime(0.0001, end);
+  noise.connect(low).connect(air).connect(ctx.destination);
+  noise.start(now);
+
+  [1568, 1319, 1175, 988, 880, 784, 659, 587, 523, 440].forEach((freq, i) => {
+    const t = now + 0.15 + i * 0.4 + Math.random() * 0.1;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(freq, t);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.94, t + 1.1);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.1, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 1.25);
+  });
+
+  const landing = end - 0.6;
+  const thump = ctx.createOscillator();
+  const thumpGain = ctx.createGain();
+  thump.type = "sine";
+  thump.frequency.setValueAtTime(120, landing);
+  thump.frequency.exponentialRampToValueAtTime(42, landing + 0.4);
+  thumpGain.gain.setValueAtTime(0.0001, landing);
+  thumpGain.gain.exponentialRampToValueAtTime(0.32, landing + 0.01);
+  thumpGain.gain.exponentialRampToValueAtTime(0.0001, landing + 0.55);
+  thump.connect(thumpGain).connect(ctx.destination);
+  thump.start(landing);
+  thump.stop(landing + 0.6);
+};
+
 export const playLatch = () => {
   const ctx = getContext();
   if (!ctx) return;

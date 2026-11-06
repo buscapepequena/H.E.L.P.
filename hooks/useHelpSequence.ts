@@ -7,6 +7,7 @@ import {
   INTRO_STEPS,
   INTRO_TIMING,
   SLAM_PIECES,
+  retypeKeep,
   caretAfterCore,
   caretAfterDot,
   caretAfterExtras,
@@ -58,6 +59,7 @@ export const useHelpSequence = (onDone: () => void): IntroFrame => {
     exploding: false,
     hideText: false,
     plain: false,
+    freeText: null,
     slam: null,
     impacts: 0,
     done: false,
@@ -227,6 +229,32 @@ export const useHelpSequence = (onDone: () => void): IntroFrame => {
                 step.impact,
             );
           }
+        } else if (step.type === "retype") {
+          let text = INTRO_PHRASES[phrase].join("");
+          const target = INTRO_PHRASES[step.phrase].join("");
+          const keep = retypeKeep(text, target);
+          setFrame((f) => ({ ...f, freeText: text }));
+          while (text.length > keep) {
+            await wait(INTRO_TIMING.backspace);
+            if (cancelled) return;
+            text = text.slice(0, -1);
+            playTick();
+            const shown = text;
+            setFrame((f) => ({ ...f, freeText: shown }));
+          }
+          await wait(160);
+          while (text.length < target.length) {
+            await wait(INTRO_TIMING.type + Math.random() * 25);
+            if (cancelled) return;
+            text = target.slice(0, text.length + 1);
+            playTick();
+            const shown = text;
+            setFrame((f) => ({ ...f, freeText: shown }));
+          }
+          phrase = step.phrase;
+          extras = extrasLength(INTRO_PHRASES[phrase]);
+          dots = 0;
+          setFrame((f) => ({ ...f, phrase, extras, dots }));
         } else if (step.type === "unslam") {
           setFrame((f) => ({ ...f, slam: null, hideText: false, plain: true }));
         }

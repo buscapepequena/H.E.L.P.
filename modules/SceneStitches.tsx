@@ -1,9 +1,13 @@
 import { SceneStitch } from "@/types/scene";
 
 const jitter = (seed: number): number => {
-  const v = Math.sin(seed * 12.9898) * 43758.5453;
-  return v - Math.floor(v) - 0.5;
+  let h = Math.imul(seed ^ 0x9e3779b9, 0x85ebca6b);
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+  h ^= h >>> 16;
+  return (h >>> 0) / 4294967296 - 0.5;
 };
+
+const round = (n: number): number => Math.round(n * 100) / 100;
 
 export default function SceneStitches({ seam }: { seam: SceneStitch }) {
   const height = seam.bottom - seam.top;
@@ -18,10 +22,10 @@ export default function SceneStitches({ seam }: { seam: SceneStitch }) {
     const dy = jitter(i + 31) * 0.5;
     const dx = jitter(i + 57) * 0.6;
     return {
-      x1: half + 2 - reach + dx,
-      y1: y + dy,
-      x2: half + 2 + reach + dx,
-      y2: y + dy,
+      x1: round(half + 2 - reach + dx),
+      y1: round(y + dy),
+      x2: round(half + 2 + reach + dx),
+      y2: round(y + dy),
     };
   });
 

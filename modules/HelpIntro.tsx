@@ -29,7 +29,12 @@ export default function HelpIntro({ onDone }: { onDone: () => void }) {
   const frame = useHelpSequence(onDone);
 
   useEffect(() => {
-    [...SLAM_PIECES.map((piece) => piece.src), ...EMOJI_IMAGES].forEach((src) => {
+    [
+      ...SLAM_PIECES.map((piece) => piece.src),
+      ...EMOJI_IMAGES,
+      "/images/panel.png",
+      "/images/panelfondo.png",
+    ].forEach((src) => {
       const img = new window.Image();
       img.src = src;
     });
@@ -62,15 +67,20 @@ export default function HelpIntro({ onDone }: { onDone: () => void }) {
     return visible ? <span key={i}>{token.text.slice(0, visible)}</span> : null;
   });
 
-  pieces.splice(
-    frame.caret + 1,
-    0,
+  const caret = (
     <span
       key="caret"
       className="intro-caret ml-[0.04em] inline-block h-[0.9em] w-[0.06em] translate-y-[0.12em]"
       style={{ background: coreColor }}
-    />,
+    />
   );
+
+  if (frame.freeText === null) pieces.splice(frame.caret + 1, 0, caret);
+
+  const content: ReactNode[] =
+    frame.freeText === null
+      ? pieces
+      : [<span key="free">{frame.freeText}</span>, caret];
 
   return (
     <div className="intro-fade-in absolute inset-0 flex cursor-default items-center justify-center overflow-hidden bg-white px-6">
@@ -89,13 +99,15 @@ export default function HelpIntro({ onDone }: { onDone: () => void }) {
             ? "'Hiragino Local', 'Hiragino Sans', 'Helvetica Neue', sans-serif"
             : "'Sketchy Notes', 'Comic Sans MS', cursive",
           fontWeight: 400,
-          fontSize: "clamp(28px, 4.8vw, 64px)",
+          fontSize: frame.plain
+            ? "clamp(20px, 3.2vw, 42px)"
+            : "clamp(28px, 4.8vw, 64px)",
           opacity: frame.slam === null && !frame.hideText ? 1 : 0,
           transition: "opacity 200ms ease",
         }}
       >
         <span className="relative whitespace-pre-wrap">
-          {pieces}
+          {content}
         </span>
       </div>
 

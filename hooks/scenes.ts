@@ -2,7 +2,28 @@ import { Scene } from "@/types/scene";
 
 export const START_SCENE = "afuera";
 
+const room = (
+  id: string,
+  title: string,
+  src: string,
+  width: number,
+  height: number,
+): Scene => ({
+  id,
+  title,
+  width,
+  height,
+  tiles: [{ src, x: 0, y: 0, width, height }],
+  focus: { x: 0.5, y: 0.5 },
+  links: [],
+});
+
 export const SCENES: Scene[] = [
+  room("security", "Security", "/images/security.png", 1586, 992),
+  room("cafeteria", "Cafeteria", "/images/cafeteria.png", 1586, 992),
+  room("ascensor", "Elevator", "/images/ascensor.png", 1585, 992),
+  room("dormitorio", "Dorms", "/images/dormitorio.png", 1585, 992),
+  room("bano", "Baño", "/images/bano.png", 1585, 992),
   {
     id: "afuera",
     title: "H.E.L.P.",
@@ -55,7 +76,7 @@ export const SCENES: Scene[] = [
           sound: "/sounds/doorbuzz.mp3",
           buzzDuration: 1500,
           activeDuration: 1500,
-          next: "adentro",
+          next: "panel",
         },
       },
     ],

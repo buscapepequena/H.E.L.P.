@@ -1,5 +1,50 @@
 @import "tailwindcss";
 
+html[data-pencil] * {
+  cursor: none !important;
+}
+
+::selection {
+  background: #b98df0;
+  color: #2a2440;
+}
+
+@font-face {
+  font-family: "PixelMplus10";
+  src: url("/fonts/PixelMplus10-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "PixelMplus10";
+  src: url("/fonts/PixelMplus10-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "PixelMplus12";
+  src: url("/fonts/PixelMplus12-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+@theme {
+  --font-pixel: "PixelMplus10", ui-monospace, monospace;
+  --font-pixel12: "PixelMplus12", ui-monospace, monospace;
+}
+
+.pixel-crisp {
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: unset;
+  font-smooth: never;
+  text-rendering: optimizeSpeed;
+}
+
 @font-face {
   font-family: "Hiragino Local";
   src: url("/fonts/Hiragino.otf") format("opentype");
@@ -65,7 +110,7 @@
 }
 
 .intro-fade-in {
-  animation: intro-fade-in 350ms ease-out both;
+  animation: intro-fade-in 350ms ease-out backwards;
 }
 
 @keyframes intro-caret {
@@ -230,6 +275,157 @@
 
 .explode-shake {
   animation: explode-shake 520ms ease-out both;
+}
+
+@keyframes panel-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(18px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.015) translateY(-3px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.panel-in {
+  animation: panel-in 650ms cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+
+@keyframes screen-on {
+  0% {
+    opacity: 0;
+    transform: scaleY(0.01);
+  }
+  45% {
+    opacity: 1;
+    transform: scaleY(0.01);
+  }
+  70% {
+    transform: scaleY(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+.screen-on {
+  animation: screen-on 520ms ease-out 450ms both;
+}
+
+@keyframes screen-swap {
+  0% {
+    opacity: 0;
+    filter: brightness(2.2);
+    transform: scaleY(0.04);
+  }
+  35% {
+    opacity: 1;
+    transform: scaleY(1.03);
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+    transform: scaleY(1);
+  }
+}
+
+.screen-swap {
+  animation: screen-swap 320ms ease-out both;
+}
+
+.screen-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #f7a3d0 rgba(255, 255, 255, 0.06);
+}
+
+.screen-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.screen-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+}
+
+.screen-scroll::-webkit-scrollbar-thumb {
+  background: #f7a3d0;
+  border-radius: 4px;
+}
+
+@keyframes map-drop {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(620px);
+    opacity: 0;
+  }
+}
+
+.map-falling line,
+.map-falling circle {
+  animation: map-drop 2.6s cubic-bezier(0.55, 0, 0.9, 0.55) var(--drop) both;
+}
+
+@keyframes map-rise {
+  from {
+    opacity: 0;
+  }
+}
+
+.map-rising {
+  animation: map-rise 600ms ease-out both;
+}
+
+@keyframes rain-fade {
+  0% {
+    opacity: 0;
+  }
+  10%,
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.rain-fade {
+  animation: rain-fade 8s ease-in-out both;
+}
+
+@keyframes rain-scroll {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(50%);
+  }
+}
+
+.rain-scroll {
+  animation: rain-scroll 2.5s linear infinite;
+}
+
+@keyframes room-tile-in {
+  0% {
+    opacity: 0;
+    transform: translateY(10%) scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.room-tile {
+  animation: room-tile-in 360ms cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
 }
 
 @keyframes slam-ring {

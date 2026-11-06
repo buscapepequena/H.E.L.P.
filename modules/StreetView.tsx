@@ -8,8 +8,7 @@ import SceneGlass from "@/modules/SceneGlass";
 import SceneFlicker from "@/modules/SceneFlicker";
 import ZoomKeys from "@/modules/ZoomKeys";
 import NavPad from "@/modules/NavPad";
-import HelpIntro from "@/modules/HelpIntro";
-import DraggableControl from "@/modules/DraggableControl";
+import HelpIntro from "@/modules/HelpIntro";import DraggableControl from "@/modules/DraggableControl";
 import SceneStitches from "@/modules/SceneStitches";import DoorPanel from "@/modules/DoorPanel";
 
 const Chevron = ({ rotation }: { rotation: number }) => (
@@ -27,14 +26,22 @@ const Chevron = ({ rotation }: { rotation: number }) => (
   </svg>
 );
 
-export default function StreetView() {
-  const sv = useStreetView(SCENES, START_SCENE);
+export default function StreetView({
+  startId = START_SCENE,
+  embedded = false,
+  compact = false,
+}: {
+  startId?: string;
+  embedded?: boolean;
+  compact?: boolean;
+}) {
+  const sv = useStreetView(SCENES, startId);
   const transition = sv.transition;
 
   return (
     <div
       ref={sv.containerRef}
-      className="relative flex h-dvh w-full touch-none select-none overflow-hidden bg-[#2a2440]"
+      className={`relative flex w-full touch-none select-none overflow-hidden bg-[#2a2440] ${embedded ? "h-full" : "h-dvh"}`}
       style={{ cursor: sv.dragging ? "grabbing" : "grab" }}
       onPointerDown={sv.onPointerDown}
       onPointerMove={sv.onPointerMove}
@@ -97,7 +104,7 @@ export default function StreetView() {
             index={index}
           />
         ))}
-        {sv.scene.focusAreas?.map((area) => (
+        {!embedded && sv.scene.focusAreas?.map((area) => (
           <button
             key={`${sv.scene.id}-area-${area.id}`}
             type="button"
@@ -154,7 +161,13 @@ export default function StreetView() {
         }}
       />
 
-      <div className="absolute bottom-6 right-4 flex flex-col items-center gap-3">
+      <div
+        className="absolute bottom-6 right-4 flex origin-bottom-right flex-col items-center gap-3"
+        style={{
+          transform: compact ? "scale(0.6)" : "scale(1)",
+          transition: "transform 380ms cubic-bezier(0.22, 1, 0.36, 1)",
+        }}
+      >
         <DraggableControl>
           <NavPad onPan={sv.pan} onReset={sv.reset} />
         </DraggableControl>

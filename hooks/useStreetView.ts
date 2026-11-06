@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useRouter } from "next/navigation";
 import {
   PanDirection,
   Scene,
@@ -26,6 +27,8 @@ const PAN_STEP = 180;
 const NAV_ZOOM = 2.6;
 const ZOOM_DURATION = 550;
 const FADE_DURATION = 320;
+const PANEL_STAGE = "panel";
+const PANEL_ROUTE = "/navigation";
 const DIVE_DURATION = 750;
 const DIVE_ZOOM = 12;
 const DEFAULT_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
@@ -81,6 +84,7 @@ export const useStreetView = (scenes: Scene[], startId: string) => {
   const pinch = useRef<number | null>(null);
   const navigating = useRef<boolean>(false);
   const initialized = useRef<boolean>(false);
+  const sizeRef = useRef<Size>({ width: 0, height: 0 });
   const [focused, setFocused] = useState<SceneFocusArea | null>(null);
   const [overlayVisible, setOverlayVisible] = useState<boolean>(false);
   const overlayTimer = useRef<number | null>(null);
@@ -89,6 +93,11 @@ export const useStreetView = (scenes: Scene[], startId: string) => {
     easing: DEFAULT_EASING,
   });
   const [intro, setIntro] = useState<{ next?: string } | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    router.prefetch(PANEL_ROUTE);
+  }, [router]);
 
   const clearFocus = useCallback(() => {
     if (overlayTimer.current !== null) {
@@ -121,13 +130,28 @@ export const useStreetView = (scenes: Scene[], startId: string) => {
       const first = !initialized.current;
       initialized.current = true;
       const current = sceneRef.current;
+      const prev = sizeRef.current;
+      sizeRef.current = next;
       setAnimated(false);
       setSize(next);
-      setView((v) =>
-        first
-          ? focusView(current, next, 1, current.focus.x, current.focus.y)
-          : clampView(v, current, next),
-      );
+      setView((v) => {
+        if (first) {
+          return focusView(current, next, 1, current.focus.x, current.focus.y);
+        }
+        const prevScale = baseScale(current, prev) * v.zoom;
+        const nextScale = baseScale(current, next) * v.zoom;
+        const cx = (prev.width / 2 - v.x) / prevScale;
+        const cy = (prev.height / 2 - v.y) / prevScale;
+        return clampView(
+          {
+            zoom: v.zoom,
+            x: next.width / 2 - cx * nextScale,
+            y: next.height / 2 - cy * nextScale,
+          },
+          current,
+          next,
+        );
+      });
     });
     observer.observe(el);
     return () => observer.disconnect();
@@ -304,6 +328,10 @@ export const useStreetView = (scenes: Scene[], startId: string) => {
   );
 
   const finishIntro = useCallback(() => {
+    if (intro?.next === PANEL_STAGE) {
+      router.push(PANEL_ROUTE);
+      return;
+    }
     const target = scenes.find((s) => s.id === intro?.next);
     if (!target) {
       console.log(`escena "${intro?.next}" no existe todavía`);
@@ -319,7 +347,7 @@ export const useStreetView = (scenes: Scene[], startId: string) => {
       setFading(false);
       navigating.current = false;
     }, 60);
-  }, [scenes, intro, size, clearFocus]);
+  }, [scenes, intro, size, clearFocus, router]);
 
   useEffect(() => {
     const el = containerRef.current;
