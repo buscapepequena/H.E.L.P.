@@ -17,7 +17,7 @@ const OSTINATO_MAJOR = [293.66, 440, 369.99, 587.33, 392, 440];
 const ROOTS = [73.42, 73.42, 65.41, 87.31];
 const ROOTS_MAJOR = [73.42, 98, 110, 73.42];
 
-const place = (ctx: BaseAudioContext, bus: AudioNode, pan: number) => {
+export const place = (ctx: BaseAudioContext, bus: AudioNode, pan: number) => {
   const panner = ctx.createStereoPanner();
   panner.pan.value = pan;
   panner.connect(bus);

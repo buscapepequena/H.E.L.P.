@@ -386,6 +386,105 @@ export const playFall = (duration = 5) => {
   thump.stop(landing + 0.6);
 };
 
+const SPARKLE = [
+  1046.5, 1174.66, 1318.51, 1567.98, 1760, 2093, 2349.32, 2637.02,
+];
+
+export const playFairies = (duration = 10) => {
+  const ctx = getContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  const end = now + duration;
+
+  const hall = makeHall(ctx, 3.4);
+  const wet = ctx.createGain();
+  wet.gain.value = 0.6;
+  const dry = ctx.createGain();
+  dry.gain.value = 0.75;
+  const out = ctx.createGain();
+  out.gain.setValueAtTime(0.0001, now);
+  out.gain.exponentialRampToValueAtTime(2.5, now + duration * 0.04);
+  out.gain.setValueAtTime(2.5, now + duration * 0.82);
+  out.gain.exponentialRampToValueAtTime(0.0001, end);
+  out.connect(hall).connect(wet).connect(ctx.destination);
+  out.connect(dry).connect(ctx.destination);
+
+  const length = Math.floor(ctx.sampleRate * 0.035);
+  const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+  const channel = buffer.getChannelData(0);
+  for (let i = 0; i < length; i++) {
+    channel[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 3);
+  }
+
+  const flutter = (start: number, beats: number, pan: number) => {
+    const pace = 0.05 + Math.random() * 0.025;
+    const place = ctx.createStereoPanner();
+    place.pan.value = pan;
+    place.connect(out);
+    for (let b = 0; b < beats; b++) {
+      const wing = ctx.createBufferSource();
+      wing.buffer = buffer;
+      const band = ctx.createBiquadFilter();
+      band.type = "bandpass";
+      band.frequency.value = 1400 + Math.random() * 1400;
+      band.Q.value = 1.1;
+      const gain = ctx.createGain();
+      gain.gain.value = (0.1 + Math.random() * 0.08) * (b % 2 ? 0.6 : 1);
+      wing.connect(band).connect(gain).connect(place);
+      wing.start(start + b * pace);
+    }
+  };
+
+  const chime = (t: number, freq: number, level: number, pan: number) => {
+    const place = ctx.createStereoPanner();
+    place.pan.value = pan;
+    place.connect(out);
+    [
+      [1, 1],
+      [2.76, 0.22],
+      [5.4, 0.06],
+    ].forEach(([ratio, amount]) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const ring = 1.5 / Math.sqrt(ratio);
+      osc.type = "sine";
+      osc.frequency.value = freq * ratio;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(level * amount, t + 0.003);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + ring);
+      osc.connect(gain).connect(place);
+      osc.start(t);
+      osc.stop(t + ring + 0.02);
+    });
+  };
+
+  for (let t = 0.1; t < duration - 0.8; t += 0.3 + Math.random() * 0.55) {
+    flutter(now + t, 4 + Math.floor(Math.random() * 5), Math.random() * 1.6 - 0.8);
+  }
+
+  for (let t = 0.2; t < duration - 1; t += 0.45 + Math.random() * 0.9) {
+    chime(
+      now + t,
+      SPARKLE[Math.floor(Math.random() * SPARKLE.length)],
+      0.035 + Math.random() * 0.03,
+      Math.random() * 1.6 - 0.8,
+    );
+  }
+
+  [0.015, 0.34, 0.66].forEach((at, run) => {
+    const first = Math.floor(Math.random() * 3);
+    for (let n = 0; n < 6; n++) {
+      const step = run % 2 ? 5 - n : n;
+      chime(
+        now + at * duration + n * 0.075,
+        SPARKLE[first + step],
+        0.04,
+        (n / 5 - 0.5) * (run % 2 ? -1.2 : 1.2),
+      );
+    }
+  });
+};
+
 export const playLatch = () => {
   const ctx = getContext();
   if (!ctx) return;

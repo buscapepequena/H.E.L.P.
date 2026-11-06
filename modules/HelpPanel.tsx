@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { playClick, playSwoosh } from "@/hooks/soundEffects";
+import { useEffect, useRef, useState } from "react";
+import { playClick, playFairies, playSwoosh } from "@/hooks/soundEffects";
 import { PANEL_BUTTONS, VIEW_SCREENS } from "@/hooks/panelButtons";
 import {
   LANG_CHANGE_EVENT,
@@ -28,6 +28,8 @@ import PencilCursor from "@/modules/PencilCursor";
 const NAV_COUNT = PANEL_BUTTONS.filter((b) => b.kind === "nav").length;
 
 const BACKDROP = { src: "/images/panelfondo.png", width: 1672, height: 941 };
+const BUTTERFLIES_SRC = "/images/mariposas.gif";
+const BUTTERFLIES_MS = 10000;
 
 const pct = (value: number, total: number): string => `${(value / total) * 100}%`;
 
@@ -40,6 +42,8 @@ export default function HelpPanel() {
   const [roomScene, setRoomScene] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<boolean>(false);
   const [raised, setRaised] = useState<boolean>(false);
+  const [butterflies, setButterflies] = useState<boolean>(false);
+  const butterfliesTimer = useRef<number | null>(null);
   const { scrollRef, rootRef, screenRef, rect, measure } = useScreenRect();
   const layout = usePanelLayout();
   const { popped, closePop } = useMusic();
@@ -78,6 +82,27 @@ export default function HelpPanel() {
   useEffect(() => {
     document.documentElement.lang = lang;
   }, [lang]);
+
+  useEffect(() => {
+    const img = new window.Image();
+    img.src = BUTTERFLIES_SRC;
+    return () => {
+      if (butterfliesTimer.current !== null) {
+        window.clearTimeout(butterfliesTimer.current);
+      }
+    };
+  }, []);
+
+  const releaseButterflies = () => {
+    if (butterflies) return;
+    playClick(1.2);
+    playFairies(BUTTERFLIES_MS / 1000);
+    setButterflies(true);
+    butterfliesTimer.current = window.setTimeout(() => {
+      butterfliesTimer.current = null;
+      setButterflies(false);
+    }, BUTTERFLIES_MS);
+  };
 
   const switchLang = () => {
     const next = PANEL_LANGS[(PANEL_LANGS.indexOf(lang) + 1) % PANEL_LANGS.length];
@@ -235,6 +260,18 @@ export default function HelpPanel() {
       }`}
     >
       <PencilCursor />
+      {butterflies && (
+        <Image
+          src={BUTTERFLIES_SRC}
+          alt=""
+          width={362}
+          height={362}
+          unoptimized
+          loading="eager"
+          draggable={false}
+          className="butterfly-flood pointer-events-none fixed inset-0 z-[65] flex h-full w-full select-none object-cover [image-rendering:pixelated]"
+        />
+      )}
       <Image
         src={BACKDROP.src}
         alt=""
@@ -284,6 +321,18 @@ export default function HelpPanel() {
         }
       >
         {langButton}
+        <button
+          type="button"
+          aria-label="Rosetta"
+          onClick={releaseButterflies}
+          className="pointer-events-auto absolute z-10 flex"
+          style={{
+            left: pct(variant.avatar.x, image.width),
+            top: pct(variant.avatar.y, image.height),
+            width: pct(variant.avatar.width, image.width),
+            height: pct(variant.avatar.height, image.height),
+          }}
+        />
         <PanelButtons
           selectedNav={selectedNav}
           activeIcon={activeIcon}

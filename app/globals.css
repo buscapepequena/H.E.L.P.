@@ -400,6 +400,10 @@ html[data-pencil] * {
   animation: rain-fade 8s ease-in-out both;
 }
 
+.butterfly-flood {
+  animation: rain-fade 10s ease-in-out both;
+}
+
 @keyframes rain-scroll {
   from {
     transform: translateY(0);

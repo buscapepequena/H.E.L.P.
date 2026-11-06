@@ -1,6 +1,17 @@
 import { RefObject } from "react";
 import { PanelTextKey } from "@/types/panel";
 
+export interface MirrorsVersion {
+  turn: number[];
+  undulate: boolean;
+  pulse: boolean;
+  keys: boolean;
+  synth: boolean;
+  room: number;
+  wet: number;
+  dry: number;
+}
+
 export interface Track {
   titleKey: PanelTextKey;
   src?: string;

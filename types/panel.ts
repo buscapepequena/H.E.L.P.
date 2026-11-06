@@ -1,6 +1,6 @@
 export type PanelButtonKind = "nav" | "icon" | "small";
 
-export type PanelLang = "en" | "es";
+export type PanelLang = "en" | "es" | "jam" | "ht";
 
 export type PanelView =
   | "map"
@@ -38,6 +38,10 @@ export type PanelTextKey =
   | "songDeparture"
   | "songTerms"
   | "songAlone"
+  | "songDawn"
+  | "songMirrors"
+  | "songMirrorsPulse"
+  | "songMirrorsChamber"
   | "songDepths"
   | "popOut"
   | "musicPlay"
