@@ -1,8 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { readProfile, saveProfile } from "@/hooks/localProfile";
 import { TRACKS } from "@/hooks/tracks";
 import { MusicContextValue } from "@/types/music";
+
+const VOLUME_SAVE_MS = 300;
 
 export const useMusicEngine = (): MusicContextValue => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -10,6 +13,8 @@ export const useMusicEngine = (): MusicContextValue => {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const resumeRef = useRef<boolean>(false);
   const repeatRef = useRef<boolean>(false);
+  const profileReadyRef = useRef<boolean>(false);
+  const volumeTimerRef = useRef<number | null>(null);
   const [index, setIndex] = useState<number>(0);
   const [playing, setPlaying] = useState<boolean>(false);
   const [time, setTime] = useState<number>(0);
@@ -24,6 +29,25 @@ export const useMusicEngine = (): MusicContextValue => {
     if (!TRACKS.length) return;
     setIndex((i) => (i + delta + TRACKS.length) % TRACKS.length);
   }, []);
+
+  useEffect(() => {
+    void readProfile().then((profile) => {
+      if (typeof profile.volume === "number") setVolumeState(profile.volume);
+      if (profile.repeat) {
+        repeatRef.current = true;
+        setRepeat(true);
+      }
+      const saved = TRACKS.findIndex((song) => song.titleKey === profile.track);
+      if (saved >= 0) setIndex(saved);
+      profileReadyRef.current = true;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (profileReadyRef.current && track) {
+      void saveProfile({ track: track.titleKey });
+    }
+  }, [track]);
 
   useEffect(() => {
     const audio = new Audio();
@@ -86,7 +110,9 @@ export const useMusicEngine = (): MusicContextValue => {
     const timer = window.setTimeout(() => {
       TRACKS.reduce<Promise<unknown>>(
         (queue, song) =>
-          queue.then(() => song.render?.()).catch(() => undefined),
+          queue
+            .then(() => (song.src ? undefined : song.render?.()))
+            .catch(() => undefined),
         Promise.resolve(),
       );
     }, 1500);
@@ -136,6 +162,19 @@ export const useMusicEngine = (): MusicContextValue => {
   const toggleRepeat = () => {
     repeatRef.current = !repeatRef.current;
     setRepeat(repeatRef.current);
+    void saveProfile({ repeat: repeatRef.current });
+  };
+
+  const setVolume = (value: number) => {
+    const next = Math.max(0, Math.min(1, value));
+    setVolumeState(next);
+    if (volumeTimerRef.current !== null) {
+      window.clearTimeout(volumeTimerRef.current);
+    }
+    volumeTimerRef.current = window.setTimeout(() => {
+      volumeTimerRef.current = null;
+      void saveProfile({ volume: next });
+    }, VOLUME_SAVE_MS);
   };
 
   return {
@@ -152,7 +191,7 @@ export const useMusicEngine = (): MusicContextValue => {
     next: () => jump(1),
     prev: () => jump(-1),
     seek,
-    setVolume: (value) => setVolumeState(Math.max(0, Math.min(1, value))),
+    setVolume,
     toggleRepeat,
     popOut: () => {
       setCollapsed(false);

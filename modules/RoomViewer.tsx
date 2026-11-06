@@ -15,6 +15,7 @@ export default function RoomViewer({
   onToggle,
   onBack,
   onSettled,
+  onEnter,
   t,
 }: {
   sceneId: string;
@@ -24,6 +25,7 @@ export default function RoomViewer({
   onToggle: () => void;
   onBack: () => void;
   onSettled: () => void;
+  onEnter: () => void;
   t: PanelDictionary;
 }) {
   const settle = (event: TransitionEvent<HTMLDivElement>) => {
@@ -47,7 +49,12 @@ export default function RoomViewer({
       }}
     >
       <div className="screen-swap relative flex h-full w-full">
-        <StreetView startId={sceneId} embedded compact={!expanded} />
+        <StreetView
+          startId={sceneId}
+          embedded
+          compact={!expanded}
+          onEnter={onEnter}
+        />
         <div className="absolute right-[3%] top-[4%] flex flex-row gap-2">
           <button type="button" onClick={onBack} className={toolButton}>
             {t.roomBack}

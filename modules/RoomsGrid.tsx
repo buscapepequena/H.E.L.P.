@@ -1,15 +1,17 @@
 "use client";
 
 import Image from "next/image";
-import { BOX_BORDER, ROOM_TILES } from "@/hooks/panelRooms";
+import { BOX_BORDER } from "@/hooks/panelRooms";
 import { PanelDictionary, RoomTile } from "@/types/panel";
 
 const pct = (value: number, total: number): string => `${(value / total) * 100}%`;
 
 export default function RoomsGrid({
+  rooms,
   onOpen,
   t,
 }: {
+  rooms: RoomTile[];
   onOpen: (room: RoomTile) => void;
   t: PanelDictionary;
 }) {
@@ -19,7 +21,7 @@ export default function RoomsGrid({
       style={{ top: "calc(3cqh + 5.6cqw)" }}
     >
       <div className="relative flex h-max w-full flex-row flex-wrap content-start justify-center gap-x-[3%] gap-y-[2.4cqh] px-[2%] py-[1.5cqh]">
-        {ROOM_TILES.map((room, i) => (
+        {rooms.map((room, i) => (
           <button
             key={room.id}
             type="button"

@@ -8,6 +8,14 @@ import { PanelButton, PanelDictionary } from "@/types/panel";
 const ICON_RATIO = 1.5;
 const ICON_HEIGHT = 36;
 const TEXT_SIZE = 25;
+const CHAR_WIDTH = 0.68;
+const TEXT_FILL = 0.86;
+const ROW_GAP = 16;
+
+const fitText = (b: PanelButton, label: string, units: number): number =>
+  b.kind === "icon"
+    ? Math.min(units, (b.width * TEXT_FILL) / (label.length * CHAR_WIDTH))
+    : units;
 
 export default function PanelButtons({
   panelWidth,
@@ -42,6 +50,41 @@ export default function PanelButtons({
     <>
       {buttons.map((b) => {
         const iconHeight = (iconUnits / panelHeight) * 100;
+        const textSize = b.textKey
+          ? `${(fitText(b, t[b.textKey], textUnits) / panelHeight) * 100}cqh`
+          : undefined;
+        if (b.kind === "icon" && b.icon) {
+          return (
+            <button
+              key={b.id}
+              type="button"
+              aria-label={t[b.labelKey]}
+              aria-pressed={b.id === activeIcon}
+              onClick={() => onPress(b)}
+              className="pointer-events-auto absolute flex flex-row items-center justify-center overflow-hidden transition-transform duration-100 active:scale-[0.97]"
+              style={{ ...place(b), gap: `${(ROW_GAP / panelHeight) * 100}cqh` }}
+            >
+              <Image
+                src={b.icon.src}
+                alt=""
+                width={b.icon.width}
+                height={b.icon.height}
+                unoptimized
+                draggable={false}
+                className="pointer-events-none relative flex w-auto shrink-0"
+                style={{ height: `${iconHeight}cqh` }}
+              />
+              {b.textKey && (
+                <div
+                  className="pixel-crisp pointer-events-none relative flex font-pixel12 uppercase leading-none tracking-[0.08em] text-[#3e3768]"
+                  style={{ fontSize: textSize }}
+                >
+                  {t[b.textKey]}
+                </div>
+              )}
+            </button>
+          );
+        }
         return (
           <button
             key={b.id}
@@ -82,9 +125,7 @@ export default function PanelButtons({
                     ? "items-end pb-[6%]"
                     : "items-center"
                 }`}
-                style={{
-                  fontSize: `${(textUnits / panelHeight) * 100}cqh`,
-                }}
+                style={{ fontSize: textSize }}
               >
                 {t[b.textKey]}
               </div>

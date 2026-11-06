@@ -1,28 +1,34 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useParams, usePathname, useRouter } from "next/navigation";
+import { ReactNode, useEffect, useRef, useState } from "react";
+import { DEFAULT_LOCATION, findLocation } from "@/hooks/mapLocations";
 import { playClick, playFairies, playSwoosh } from "@/hooks/soundEffects";
-import { PANEL_BUTTONS, VIEW_SCREENS } from "@/hooks/panelButtons";
+import { PANEL_BUTTONS } from "@/hooks/panelButtons";
+import { PanelContext } from "@/hooks/panelContext";
+import { readProfile, saveProfile } from "@/hooks/localProfile";
 import {
   LANG_CHANGE_EVENT,
-  LANG_STORAGE_KEY,
   PANEL_LANGS,
   PANEL_TEXT,
 } from "@/hooks/panelI18n";
 import { PANEL_VARIANTS } from "@/hooks/panelLayout";
-import { PanelButton, PanelLang, PanelView, RoomTile } from "@/types/panel";
+import { viewHref, viewOfPath } from "@/hooks/panelRoutes";
+import {
+  PanelButton,
+  PanelButtonKind,
+  PanelLang,
+  PanelView,
+  RoomTile,
+} from "@/types/panel";
 import { useScreenRect } from "@/hooks/useScreenRect";
 import { usePanelLayout } from "@/hooks/usePanelLayout";
 import { useMusic } from "@/hooks/musicContext";
 import FramedGif from "@/modules/FramedGif";
 import PanelPlane from "@/modules/PanelPlane";
-import RoomsGrid from "@/modules/RoomsGrid";
 import RoomViewer from "@/modules/RoomViewer";
 import PanelButtons from "@/modules/PanelButtons";
-import MapScreen from "@/modules/MapScreen";
-import MapView from "@/modules/MapView";
-import Mp3Player from "@/modules/Mp3Player";
 import PencilCursor from "@/modules/PencilCursor";
 
 const NAV_COUNT = PANEL_BUTTONS.filter((b) => b.kind === "nav").length;
@@ -33,11 +39,23 @@ const BUTTERFLIES_MS = 10000;
 
 const pct = (value: number, total: number): string => `${(value / total) * 100}%`;
 
-export default function HelpPanel() {
-  const [selectedNav, setSelectedNav] = useState<string>("nav-1");
-  const [activeIcon, setActiveIcon] = useState<string | null>(null);
-  const [view, setView] = useState<PanelView | null>(null);
-  const [swaps, setSwaps] = useState<number>(0);
+const buttonFor = (kind: PanelButtonKind, view: PanelView | null) =>
+  PANEL_BUTTONS.find((b) => b.kind === kind && b.view === view)?.id ?? null;
+
+export default function HelpPanel({ children }: { children: ReactNode }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useParams<{ location?: string }>();
+  const view = viewOfPath(pathname);
+  const [place, setPlace] = useState<string>(DEFAULT_LOCATION);
+  const location = findLocation(params.location)?.id ?? place;
+  const [seenPath, setSeenPath] = useState<string>(pathname);
+  const [selectedNav, setSelectedNav] = useState<string>(
+    buttonFor("nav", view) ?? "nav-1",
+  );
+  const [activeIcon, setActiveIcon] = useState<string | null>(
+    buttonFor("icon", view),
+  );
   const [lang, setLang] = useState<PanelLang>("en");
   const [roomScene, setRoomScene] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<boolean>(false);
@@ -46,12 +64,28 @@ export default function HelpPanel() {
   const butterfliesTimer = useRef<number | null>(null);
   const { scrollRef, rootRef, screenRef, rect, measure } = useScreenRect();
   const layout = usePanelLayout();
-  const { popped, closePop } = useMusic();
+  const { closePop } = useMusic();
   const t = PANEL_TEXT[lang];
+
+  if (pathname !== seenPath) {
+    setSeenPath(pathname);
+    setPlace(location);
+    setRoomScene(null);
+    setExpanded(false);
+    setRaised(false);
+    setActiveIcon(buttonFor("icon", view));
+    setSelectedNav(buttonFor("nav", view) ?? selectedNav);
+  }
 
   useEffect(() => {
     measure();
   }, [layout, measure]);
+
+  useEffect(() => {
+    PANEL_BUTTONS.forEach((button) => {
+      if (button.view) router.prefetch(viewHref(button.view, location));
+    });
+  }, [router, location]);
 
   useEffect(() => {
     if (!expanded) return;
@@ -67,16 +101,9 @@ export default function HelpPanel() {
     void document.fonts?.load("16px PixelMplus10");
     void document.fonts?.load("bold 16px PixelMplus10");
     void document.fonts?.load("16px PixelMplus12");
-    let stored: string | null = null;
-    try {
-      stored = window.localStorage.getItem(LANG_STORAGE_KEY);
-    } catch {
-      stored = null;
-    }
-    if (stored && PANEL_LANGS.includes(stored as PanelLang)) {
-      const saved = stored as PanelLang;
-      window.setTimeout(() => setLang(saved), 0);
-    }
+    void readProfile().then((profile) => {
+      if (profile.lang) setLang(profile.lang);
+    });
   }, []);
 
   useEffect(() => {
@@ -107,12 +134,9 @@ export default function HelpPanel() {
   const switchLang = () => {
     const next = PANEL_LANGS[(PANEL_LANGS.indexOf(lang) + 1) % PANEL_LANGS.length];
     setLang(next);
-    try {
-      window.localStorage.setItem(LANG_STORAGE_KEY, next);
-    } catch {
-      return;
-    }
-    window.dispatchEvent(new Event(LANG_CHANGE_EVENT));
+    void saveProfile({ lang: next }).then(() =>
+      window.dispatchEvent(new Event(LANG_CHANGE_EVENT)),
+    );
   };
 
   const openRoom = (room: RoomTile) => {
@@ -149,16 +173,22 @@ export default function HelpPanel() {
     scroller.scrollTo({ top: scroller.scrollTop + offset - 16 });
   };
 
+  const selectLocation = (id: string) => {
+    setPlace(id);
+    if (id !== location) router.push(viewHref("map", id), { scroll: false });
+  };
+
+  const showView = (next: PanelView) => {
+    router.push(viewHref(next, location), { scroll: false });
+    revealScreen();
+  };
+
   const press = (button: PanelButton) => {
     if (button.kind === "nav") {
       playClick(1);
       setSelectedNav(button.id);
       closeRoom();
-      if (button.view) {
-        setView(button.view);
-        setSwaps((n) => n + 1);
-        revealScreen();
-      }
+      if (button.view) showView(button.view);
       return;
     }
     if (button.kind === "icon") {
@@ -167,9 +197,7 @@ export default function HelpPanel() {
       if (button.view) {
         closeRoom();
         closePop();
-        setView(button.view);
-        setSwaps((n) => n + 1);
-        revealScreen();
+        showView(button.view);
       }
       return;
     }
@@ -211,19 +239,9 @@ export default function HelpPanel() {
       }}
     >
       <div className="screen-on absolute inset-0 flex bg-[radial-gradient(ellipse_at_center,#2a2152_0%,#0d0a1c_75%)]" />
-      {view === "music" && !popped && (
-        <Mp3Player key={`music-${swaps}`} t={t} />
-      )}
-      {view && view !== "music" && (
-        <MapScreen
-          key={`${view}-${swaps}`}
-          title={t[VIEW_SCREENS[view].titleKey]}
-          subtitle={VIEW_SCREENS[view].subtitle}
-        >
-          {view === "rooms" && <RoomsGrid onOpen={openRoom} t={t} />}
-          {view === "map" && <MapView homeLabel={t.mapHome} />}
-        </MapScreen>
-      )}
+      <PanelContext.Provider value={{ t, lang, openRoom, selectLocation }}>
+        {children}
+      </PanelContext.Provider>
       <div className="pointer-events-none absolute inset-0 flex bg-[repeating-linear-gradient(0deg,rgba(255,255,255,0.035)_0px,rgba(255,255,255,0.035)_1px,transparent_1px,transparent_3px)]" />
     </div>
   );
@@ -305,6 +323,7 @@ export default function HelpPanel() {
           onSettled={() => {
             if (!expanded) setRaised(false);
           }}
+          onEnter={closeRoom}
           t={t}
         />
       )}
@@ -320,6 +339,15 @@ export default function HelpPanel() {
           </>
         }
       >
+        <div
+          className="online-blink pointer-events-none absolute z-10 flex rounded-full bg-[#10262b]"
+          style={{
+            left: pct(variant.online.x, image.width),
+            top: pct(variant.online.y, image.height),
+            width: pct(variant.online.width, image.width),
+            height: pct(variant.online.height, image.height),
+          }}
+        />
         {langButton}
         <button
           type="button"

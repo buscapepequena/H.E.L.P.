@@ -1,5 +1,5 @@
-import HelpPanel from "@/modules/HelpPanel";
+import { redirect } from "next/navigation";
 
 export default function Navigation() {
-  return <HelpPanel />;
+  redirect("/ws/map");
 }

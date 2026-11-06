@@ -1,6 +1,16 @@
 import { RefObject } from "react";
 import { PanelTextKey } from "@/types/panel";
 
+export interface TrackImage {
+  src?: string;
+  srcEn?: string;
+  srcEs?: string;
+  srcPat?: string;
+  srcKre?: string;
+  width: number;
+  height: number;
+}
+
 export interface MirrorsVersion {
   turn: number[];
   undulate: boolean;
@@ -16,6 +26,7 @@ export interface Track {
   titleKey: PanelTextKey;
   src?: string;
   render?: () => Promise<string>;
+  image?: TrackImage;
 }
 
 export interface MusicContextValue {

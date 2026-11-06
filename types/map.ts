@@ -1,3 +1,23 @@
+import {
+  PanelIcon,
+  PanelLang,
+  PanelTextKey,
+  RoomTile,
+  SimSlot,
+} from "@/types/panel";
+
+export interface MapLocation {
+  id: string;
+  labelKey: PanelTextKey;
+  src: string;
+  size: number;
+  x: number;
+  y: number;
+  rooms: RoomTile[];
+  sims: SimSlot[];
+  portal: Record<PanelLang, PanelIcon>;
+}
+
 export interface MapSegment {
   id: string;
   x1: number;

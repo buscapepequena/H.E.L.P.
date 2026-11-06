@@ -1,5 +1,7 @@
-import StreetView from "@/modules/StreetView";
+import { redirect } from "next/navigation";
+import { DEFAULT_LOCATION } from "@/hooks/mapLocations";
+import { viewHref } from "@/hooks/panelRoutes";
 
 export default function Home() {
-  return <StreetView />;
+  redirect(viewHref("map", DEFAULT_LOCATION));
 }

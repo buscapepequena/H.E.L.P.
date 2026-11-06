@@ -9,7 +9,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { useRouter } from "next/navigation";
 import {
   PanDirection,
   Scene,
@@ -28,7 +27,6 @@ const NAV_ZOOM = 2.6;
 const ZOOM_DURATION = 550;
 const FADE_DURATION = 320;
 const PANEL_STAGE = "panel";
-const PANEL_ROUTE = "/navigation";
 const DIVE_DURATION = 750;
 const DIVE_ZOOM = 12;
 const DEFAULT_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
@@ -44,7 +42,7 @@ const clampView = (view: ViewState, scene: Scene, size: Size): ViewState => {
   const minY = Math.min(0, size.height - scene.height * scale);
   return {
     zoom,
-    x: Math.min(0, Math.max(minX, view.x)),
+    x: scene.fold ? view.x : Math.min(0, Math.max(minX, view.x)),
     y: Math.min(0, Math.max(minY, view.y)),
   };
 };
@@ -72,7 +70,11 @@ const isControl = (target: EventTarget): boolean =>
   target instanceof Element &&
   target.closest("button, [data-control]") !== null;
 
-export const useStreetView = (scenes: Scene[], startId: string) => {
+export const useStreetView = (
+  scenes: Scene[],
+  startId: string,
+  onEnter?: () => void,
+) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState<Size>({ width: 0, height: 0 });
   const [sceneId, setSceneId] = useState<string>(startId);
@@ -93,11 +95,11 @@ export const useStreetView = (scenes: Scene[], startId: string) => {
     easing: DEFAULT_EASING,
   });
   const [intro, setIntro] = useState<{ next?: string } | null>(null);
-  const router = useRouter();
+  const enterRef = useRef<(() => void) | undefined>(onEnter);
 
   useEffect(() => {
-    router.prefetch(PANEL_ROUTE);
-  }, [router]);
+    enterRef.current = onEnter;
+  }, [onEnter]);
 
   const clearFocus = useCallback(() => {
     if (overlayTimer.current !== null) {
@@ -329,7 +331,7 @@ export const useStreetView = (scenes: Scene[], startId: string) => {
 
   const finishIntro = useCallback(() => {
     if (intro?.next === PANEL_STAGE) {
-      router.push(PANEL_ROUTE);
+      enterRef.current?.();
       return;
     }
     const target = scenes.find((s) => s.id === intro?.next);
@@ -347,7 +349,7 @@ export const useStreetView = (scenes: Scene[], startId: string) => {
       setFading(false);
       navigating.current = false;
     }, 60);
-  }, [scenes, intro, size, clearFocus, router]);
+  }, [scenes, intro, size, clearFocus]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -446,6 +448,7 @@ export const useStreetView = (scenes: Scene[], startId: string) => {
     containerRef,
     scene,
     ready: size.width > 0,
+    size,
     view,
     scale,
     animated,

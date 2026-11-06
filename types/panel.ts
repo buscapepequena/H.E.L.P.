@@ -2,13 +2,9 @@ export type PanelButtonKind = "nav" | "icon" | "small";
 
 export type PanelLang = "en" | "es" | "jam" | "ht";
 
-export type PanelView =
-  | "map"
-  | "rooms"
-  | "portals"
-  | "mirrors"
-  | "sims"
-  | "music";
+export type LocationView = "map" | "rooms" | "portals" | "mirrors" | "sims";
+
+export type PanelView = LocationView | "music" | "local" | "settings";
 
 export type PanelTextKey =
   | "map"
@@ -56,6 +52,16 @@ export type PanelTextKey =
   | "disc"
   | "cart"
   | "settings"
+  | "local"
+  | "localHere"
+  | "localYours"
+  | "chat"
+  | "r2ss"
+  | "satchel"
+  | "settingsSave"
+  | "settingsLoad"
+  | "settingsSaved"
+  | "settingsBadFile"
   | "prev"
   | "next"
   | "language"
@@ -63,6 +69,13 @@ export type PanelTextKey =
   | "langStatus";
 
 export type PanelDictionary = Record<PanelTextKey, string>;
+
+export interface PanelContextValue {
+  t: PanelDictionary;
+  lang: PanelLang;
+  openRoom: (room: RoomTile) => void;
+  selectLocation: (id: string) => void;
+}
 
 export interface PanelIcon {
   src: string;
@@ -72,6 +85,48 @@ export interface PanelIcon {
 
 export interface FramedImage extends PanelIcon {
   hole: { x: number; y: number; width: number; height: number };
+}
+
+export interface CharmDrop {
+  id: number;
+  charm: PanelIcon;
+  x: number;
+  y: number;
+  size: number;
+  dx: number;
+  rise: number;
+  fall: number;
+  spin: number;
+  seconds: number;
+  delay: number;
+}
+
+export interface DownloadPlatform {
+  id: string;
+  name: string;
+  icon: PanelIcon;
+  visible: PanelCrop;
+  scale: number;
+  href?: string;
+}
+
+export interface SimSlot {
+  id: string;
+  poster?: PanelIcon;
+  video?: string;
+}
+
+export interface PortalLight {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  color: string;
+  low: number;
+  high: number;
+  seconds: number;
+  delay: number;
+  flicker?: boolean;
 }
 
 export interface RoomTile {
@@ -95,6 +150,7 @@ export interface PanelVariant {
   hole: PanelCrop;
   lang: PanelCrop;
   avatar: PanelCrop;
+  online: PanelCrop;
   punch?: [number, number][];
   buttons: PanelButton[];
   iconUnits: number;

@@ -1,9 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import { createPortal } from "react-dom";
 import { useStreetView } from "@/hooks/useStreetView";
 import { SCENES, START_SCENE } from "@/hooks/scenes";
 import SceneClock from "@/modules/SceneClock";
+import SceneCorner from "@/modules/SceneCorner";
 import SceneGlass from "@/modules/SceneGlass";
 import SceneFlicker from "@/modules/SceneFlicker";
 import ZoomKeys from "@/modules/ZoomKeys";
@@ -30,12 +32,14 @@ export default function StreetView({
   startId = START_SCENE,
   embedded = false,
   compact = false,
+  onEnter,
 }: {
   startId?: string;
   embedded?: boolean;
   compact?: boolean;
+  onEnter?: () => void;
 }) {
-  const sv = useStreetView(SCENES, startId);
+  const sv = useStreetView(SCENES, startId, onEnter);
   const transition = sv.transition;
 
   return (
@@ -49,8 +53,19 @@ export default function StreetView({
       onPointerCancel={sv.onPointerUp}
       onDoubleClick={sv.onDoubleClick}
     >
+      {sv.scene.fold && (
+        <SceneCorner
+          scene={sv.scene}
+          fold={sv.scene.fold}
+          view={sv.view}
+          scale={sv.scale}
+          size={sv.size}
+          transition={transition}
+          ready={sv.ready}
+        />
+      )}
       <div
-        className="absolute left-0 top-0 flex origin-top-left will-change-transform"
+        className={`absolute left-0 top-0 origin-top-left will-change-transform ${sv.scene.fold ? "hidden" : "flex"}`}
         style={{
           width: sv.scene.width,
           height: sv.scene.height,
@@ -104,7 +119,7 @@ export default function StreetView({
             index={index}
           />
         ))}
-        {!embedded && sv.scene.focusAreas?.map((area) => (
+        {sv.scene.focusAreas?.map((area) => (
           <button
             key={`${sv.scene.id}-area-${area.id}`}
             type="button"
@@ -182,7 +197,13 @@ export default function StreetView({
         </DraggableControl>
       </div>
 
-      {sv.intro && <HelpIntro onDone={sv.finishIntro} />}
+      {sv.intro &&
+        createPortal(
+          <div className="fixed inset-0 z-[68] flex">
+            <HelpIntro onDone={sv.finishIntro} />
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

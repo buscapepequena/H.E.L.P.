@@ -1,31 +1,43 @@
 "use client";
 
-import Image from "next/image";
 import { CSSProperties, useEffect, useRef, useState } from "react";
-import {
-  MAP_GRAPH,
-  MAP_HOME,
-  MAP_MAX_DEPTH,
-  mapFade,
-} from "@/hooks/mapGraph";
+import { MAP_GRAPH, MAP_MAX_DEPTH, mapFade } from "@/hooks/mapGraph";
+import { MAP_LOCATIONS } from "@/hooks/mapLocations";
 import { playClick, playJourney } from "@/hooks/soundEffects";
+import { useMapDrift } from "@/hooks/useMapDrift";
 import { useMapView } from "@/hooks/useMapView";
+import { MapLocation } from "@/types/map";
+import { PanelDictionary } from "@/types/panel";
 import DraggableControl from "@/modules/DraggableControl";
+import MapLocationButton from "@/modules/MapLocationButton";
 import NavPad from "@/modules/NavPad";
 import ZoomKeys from "@/modules/ZoomKeys";
 
 const RAIN_MS = 8000;
 const RAIN_SRC = "/images/mariposas.png";
 
+const PULSE_STEP_MS = 500;
+const PULSE_LAYERS = [
+  { id: "halo", stroke: "#f78fc4", width: 5, strength: 0.4 },
+  { id: "core", stroke: "#fff4fb", width: 1.7, strength: 1 },
+];
+
 const dropDelay = (depth: number) =>
   ({ "--drop": `${(MAP_MAX_DEPTH - depth) * 110}ms` }) as CSSProperties;
 
-export default function MapView({ homeLabel }: { homeLabel: string }) {
+export default function MapView({
+  t,
+  onSelect,
+}: {
+  t: PanelDictionary;
+  onSelect: (id: string) => void;
+}) {
   const map = useMapView();
-  const [homeImage, setHomeImage] = useState<boolean>(true);
+  const linesRef = useRef<SVGSVGElement | null>(null);
   const [falling, setFalling] = useState<boolean>(false);
   const rainTimer = useRef<number | null>(null);
-  const half = MAP_HOME.size / 2;
+
+  useMapDrift(linesRef);
 
   useEffect(() => {
     const img = new window.Image();
@@ -35,11 +47,12 @@ export default function MapView({ homeLabel }: { homeLabel: string }) {
     };
   }, []);
 
-  const startRain = () => {
+  const startRain = (place: MapLocation) => {
     if (falling) return;
+    onSelect(place.id);
     playClick(1.2);
     playJourney(RAIN_MS / 1000);
-    map.focusHome();
+    map.focusOn(place.x, place.y);
     setFalling(true);
     rainTimer.current = window.setTimeout(() => {
       rainTimer.current = null;
@@ -67,6 +80,7 @@ export default function MapView({ homeLabel }: { homeLabel: string }) {
         }}
       >
         <svg
+          ref={linesRef}
           className={`pointer-events-none absolute left-0 top-0 h-px w-px overflow-visible ${falling ? "map-falling" : "map-rising"}`}
         >
           {MAP_GRAPH.segments.map((s) => (
@@ -97,6 +111,23 @@ export default function MapView({ homeLabel }: { homeLabel: string }) {
               opacity={mapFade(s.depth)}
             />
           ))}
+          {PULSE_LAYERS.map((layer) =>
+            MAP_GRAPH.segments.map((s) => (
+              <line
+                key={`${s.id}-${layer.id}`}
+                className="map-pulse"
+                style={{ animationDelay: `${s.depth * PULSE_STEP_MS}ms` }}
+                x1={s.x1}
+                y1={s.y1}
+                x2={s.x2}
+                y2={s.y2}
+                pathLength={100}
+                stroke={layer.stroke}
+                strokeWidth={layer.width}
+                opacity={Math.min(1, mapFade(s.depth) + 0.35) * layer.strength}
+              />
+            )),
+          )}
           {MAP_GRAPH.nodes.map((n) => (
             <circle
               key={n.id}
@@ -111,33 +142,14 @@ export default function MapView({ homeLabel }: { homeLabel: string }) {
             />
           ))}
         </svg>
-        <button
-          type="button"
-          aria-label={homeLabel}
-          onClick={startRain}
-          className="absolute flex items-center justify-center transition-transform duration-100 active:scale-95"
-          style={{
-            left: -half,
-            top: -half,
-            width: MAP_HOME.size,
-            height: MAP_HOME.size,
-          }}
-        >
-          {homeImage ? (
-            <Image
-              src={MAP_HOME.src}
-              alt=""
-              width={MAP_HOME.size}
-              height={MAP_HOME.size}
-              unoptimized
-              draggable={false}
-              onError={() => setHomeImage(false)}
-              className="pointer-events-none relative flex h-full w-full object-contain"
-            />
-          ) : (
-            <div className="relative flex h-[42%] w-[42%] rounded-full bg-[#ffd7ec] shadow-[0_0_26px_10px_rgba(247,143,196,0.75)]" />
-          )}
-        </button>
+        {MAP_LOCATIONS.map((place) => (
+          <MapLocationButton
+            key={place.id}
+            place={place}
+            label={t[place.labelKey]}
+            onPress={() => startRain(place)}
+          />
+        ))}
       </div>
 
       <div className="absolute bottom-[3%] right-[2%] flex origin-bottom-right scale-[0.36] flex-col items-center gap-3">

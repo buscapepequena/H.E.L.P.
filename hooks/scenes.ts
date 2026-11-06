@@ -19,7 +19,47 @@ const room = (
 });
 
 export const SCENES: Scene[] = [
-  room("security", "Security", "/images/security.png", 1586, 992),
+  {
+    id: "security",
+    title: "Security",
+    width: 8666,
+    height: 992,
+    tiles: [
+      {
+        src: "/images/security.png",
+        x: 0,
+        y: 0,
+        width: 1586,
+        height: 992,
+        cropLeft: 92,
+      },
+      {
+        src: "/images/securityladoderecho.png",
+        x: 1433,
+        y: -86,
+        width: 2900,
+        height: 1103,
+      },
+      {
+        src: "/images/securityascensor.png",
+        x: 4333,
+        y: 32,
+        width: 1621,
+        height: 866,
+        cropLeft: 188,
+      },
+      {
+        src: "/images/securitypuertas.png",
+        x: 5766,
+        y: -70,
+        width: 2900,
+        height: 1014,
+      },
+    ],
+    focus: { x: 0.0809, y: 0.5 },
+    links: [],
+    fold: { seams: [1433, 4333, 5766, 8666], depth: 670 },
+  },
   room("cafeteria", "Cafeteria", "/images/cafeteria.png", 1586, 992),
   room("ascensor", "Elevator", "/images/ascensor.png", 1585, 992),
   room("dormitorio", "Dorms", "/images/dormitorio.png", 1585, 992),
@@ -31,21 +71,21 @@ export const SCENES: Scene[] = [
     height: 810,
     tiles: [
       {
-        src: "/images/afuera/edificioizquierdofinal.png",
+        src: "/images/edificioizquierdofinal.png",
         x: 0,
         y: 0,
         width: 1105,
         height: 810,
       },
       {
-        src: "/images/afuera/edificioizquierdo.png",
+        src: "/images/edificioizquierdo.png",
         x: 1105,
         y: 0,
         width: 695,
         height: 810,
       },
       {
-        src: "/images/afuera/edificiofrente.png",
+        src: "/images/edificiofrente.png",
         x: 1800,
         y: 0,
         width: 1295,
@@ -82,7 +122,7 @@ export const SCENES: Scene[] = [
     ],
     flickers: [
       {
-        image: "/images/afuera/luzapagada.png",
+        image: "/images/luzapagada.png",
         x: 2233.8,
         y: 341.3,
         width: 76.8,

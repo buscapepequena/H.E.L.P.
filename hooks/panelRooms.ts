@@ -13,7 +13,7 @@ export const ROOM_TILES: RoomTile[] = [
     labelKey: "roomOutside",
     sceneId: "afuera",
     image: {
-      src: "/images/afuera/edificiofrente.png",
+      src: "/images/edificiofrente.png",
       width: 1295,
       height: 810,
     },

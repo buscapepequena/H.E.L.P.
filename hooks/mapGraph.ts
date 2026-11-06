@@ -1,7 +1,6 @@
 import { MapGraph } from "@/types/map";
 
 export const MAP_MAX_DEPTH = 13;
-export const MAP_HOME = { src: "/images/ws.png", size: 52 };
 
 const SEED = 20;
 const DIRECTIONS: [number, number][] = [

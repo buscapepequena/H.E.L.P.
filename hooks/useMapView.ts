@@ -90,9 +90,9 @@ export const useMapView = () => {
     setView(HOME);
   }, []);
 
-  const focusHome = useCallback(() => {
+  const focusOn = useCallback((x: number, y: number) => {
     setAnimated(true);
-    setView({ x: 0, y: 0, zoom: HOME_ZOOM });
+    setView({ x: -x * HOME_ZOOM, y: -y * HOME_ZOOM, zoom: HOME_ZOOM });
   }, []);
 
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
@@ -141,7 +141,7 @@ export const useMapView = () => {
     dragging,
     pan,
     reset,
-    focusHome,
+    focusOn,
     zoomIn: () => zoomAt(ZOOM_STEP, 0, 0, true),
     zoomOut: () => zoomAt(1 / ZOOM_STEP, 0, 0, true),
     canZoomIn: view.zoom < MAX_ZOOM - 0.001,

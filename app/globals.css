@@ -373,6 +373,57 @@ html[data-pencil] * {
   animation: map-drop 2.6s cubic-bezier(0.55, 0, 0.9, 0.55) var(--drop) both;
 }
 
+@keyframes online-blink {
+  0%,
+  50% {
+    opacity: 0;
+  }
+  58%,
+  92% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.online-blink {
+  animation: online-blink 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .online-blink {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+@keyframes map-pulse {
+  0% {
+    stroke-dashoffset: 34;
+  }
+  7%,
+  100% {
+    stroke-dashoffset: -100;
+  }
+}
+
+.map-pulse {
+  stroke-dasharray: 34 300;
+  stroke-dashoffset: 34;
+  animation: map-pulse 8s linear infinite backwards;
+}
+
+.map-falling .map-pulse {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-pulse {
+    display: none;
+  }
+}
+
 @keyframes map-rise {
   from {
     opacity: 0;
@@ -430,6 +481,118 @@ html[data-pencil] * {
 
 .room-tile {
   animation: room-tile-in 360ms cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+}
+
+@keyframes charm-spill {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3) rotate(0deg);
+  }
+  10% {
+    opacity: 1;
+  }
+  28% {
+    transform: translate(
+        calc(-50% + var(--dx) * 0.4),
+        calc(-50% - var(--rise))
+      )
+      scale(1) rotate(calc(var(--spin) * 0.3));
+    animation-timing-function: ease-in;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--fall)))
+      scale(0.9) rotate(var(--spin));
+  }
+}
+
+.charm-drop {
+  animation: charm-spill 2s ease-out both;
+}
+
+.sim-tile {
+  animation: room-tile-in 360ms cubic-bezier(0.2, 0.9, 0.3, 1.15) backwards;
+}
+
+@keyframes portal-breathe {
+  0%,
+  100% {
+    opacity: var(--low);
+  }
+  50% {
+    opacity: var(--high);
+  }
+}
+
+@keyframes portal-flicker {
+  0%,
+  100% {
+    opacity: var(--high);
+  }
+  38% {
+    opacity: var(--low);
+  }
+  41% {
+    opacity: var(--high);
+  }
+  44% {
+    opacity: var(--low);
+  }
+  70% {
+    opacity: var(--high);
+  }
+}
+
+@keyframes portal-steam {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.7);
+  }
+  30% {
+    opacity: 0.22;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-90%) translateX(18%) scale(1.5);
+  }
+}
+
+@keyframes portal-shadow {
+  0%,
+  100% {
+    transform: translate(-3%, -2%);
+  }
+  50% {
+    transform: translate(3%, 2%);
+  }
+}
+
+.portal-breathe {
+  animation: portal-breathe 8s ease-in-out infinite both;
+}
+
+.portal-flicker {
+  animation: portal-flicker 6s ease-in-out infinite both;
+}
+
+.portal-steam {
+  animation: portal-steam 7s ease-out infinite both;
+}
+
+.portal-shadow {
+  animation: portal-shadow 22s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-breathe,
+  .portal-flicker,
+  .portal-steam,
+  .portal-shadow {
+    animation: none;
+  }
 }
 
 @keyframes slam-ring {

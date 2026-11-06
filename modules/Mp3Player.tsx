@@ -4,16 +4,19 @@ import Image from "next/image";
 import { PointerEvent } from "react";
 import { formatTime, useMusic } from "@/hooks/musicContext";
 import { playClick } from "@/hooks/soundEffects";
-import { PanelDictionary } from "@/types/panel";
+import { trackArt } from "@/hooks/trackArt";
+import { PanelDictionary, PanelLang } from "@/types/panel";
 import MusicSeek from "@/modules/MusicSeek";
 import MusicSpectrum from "@/modules/MusicSpectrum";
 
 const PLAYER = { src: "/images/mp3.png", width: 1310, height: 938 };
+const CD = { src: "/images/cd.png", width: 300, height: 252 };
 const HOLE = { x: 85, y: 254, width: 1140, height: 321 };
 const VOLUME = { x: 1015, y: 691, width: 200, height: 36 };
 const VOLUME_CELLS = 9;
 const REPEAT_LED = { x: 148, y: 756, width: 49, height: 22 };
 const SPEAKER_WAVES = { x: 950, y: 685, width: 40, height: 48 };
+const ONLINE_LIGHT = { x: 245, y: 854, width: 30, height: 30 };
 const BUTTONS = {
   repeat: { x: 84, y: 648, width: 178, height: 137 },
   prev: { x: 282, y: 648, width: 174, height: 137 },
@@ -31,8 +34,15 @@ const box = (b: { x: number; y: number; width: number; height: number }) => ({
 const pressable =
   "absolute flex items-center justify-center transition-transform duration-100 active:scale-[0.95]";
 
-export default function Mp3Player({ t }: { t: PanelDictionary }) {
+export default function Mp3Player({
+  t,
+  lang,
+}: {
+  t: PanelDictionary;
+  lang: PanelLang;
+}) {
   const music = useMusic();
+  const art = trackArt(music.track?.image, lang);
 
   const pickVolume = (event: PointerEvent<HTMLDivElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -57,15 +67,22 @@ export default function Mp3Player({ t }: { t: PanelDictionary }) {
           style={box(HOLE)}
         >
           <div className="relative flex min-h-0 flex-1 flex-row gap-[2.5cqw]">
-            <div className="relative flex aspect-square h-full shrink-0 items-center justify-center rounded border border-[#7fd9f2]/70 bg-[#10245e] p-[1cqh]">
+            <div
+              className={`relative flex aspect-square h-full shrink-0 items-center justify-center overflow-hidden rounded border border-[#7fd9f2]/70 bg-[#10245e] ${
+                art ? "" : "p-[1cqh]"
+              }`}
+            >
               <Image
-                src="/images/cd.png"
+                key={art?.src ?? CD.src}
+                src={art?.src ?? CD.src}
                 alt=""
-                width={300}
-                height={252}
+                width={art?.width ?? CD.width}
+                height={art?.height ?? CD.height}
                 unoptimized
                 draggable={false}
-                className="relative flex h-full w-full object-contain"
+                className={`relative flex h-full w-full ${
+                  art ? "object-cover" : "object-contain"
+                }`}
               />
             </div>
             <div className="relative flex min-w-0 flex-1 flex-col gap-[1.2cqh]">
@@ -103,6 +120,11 @@ export default function Mp3Player({ t }: { t: PanelDictionary }) {
           unoptimized
           draggable={false}
           className="pointer-events-none relative flex h-full w-full select-none"
+        />
+
+        <div
+          className="online-blink pointer-events-none absolute flex rounded-full bg-[#0b1838]"
+          style={box(ONLINE_LIGHT)}
         />
 
         <button

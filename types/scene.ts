@@ -64,6 +64,7 @@ export interface SceneTile {
   width: number;
   height: number;
   fadeRight?: number;
+  cropLeft?: number;
 }
 
 export interface SceneStitch {
@@ -81,6 +82,17 @@ export interface ScenePipe {
   width: number;
 }
 
+export interface SceneFold {
+  seams: number[];
+  depth: number;
+}
+
+export interface FoldCamera {
+  x: number;
+  z: number;
+  yaw: number;
+}
+
 export interface Scene {
   id: string;
   title: string;
@@ -95,6 +107,7 @@ export interface Scene {
   focusAreas?: SceneFocusArea[];
   pipes?: ScenePipe[];
   stitches?: SceneStitch[];
+  fold?: SceneFold;
 }
 
 export interface ViewState {

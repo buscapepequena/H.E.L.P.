@@ -66,17 +66,28 @@ export const VIEW_SCREENS: Record<
   mirrors: { titleKey: "mirrorsTitle", subtitle: "ミラー" },
   sims: { titleKey: "simsTitle", subtitle: "シム" },
   music: { titleKey: "tunesTitle", subtitle: "チューン" },
+  local: { titleKey: "local", subtitle: "ローカル" },
+  settings: { titleKey: "settings", subtitle: "メモリー" },
 };
 
-export const CD_ICON: PanelIcon = {
-  src: "/images/cd.png",
-  width: 300,
-  height: 252,
+export const MOBILE_ICONS: Partial<Record<PanelTextKey, PanelIcon>> = {
+  tools: { src: "/images/herramientas.png", width: 200, height: 171 },
+  computer: { src: "/images/ordenador.png", width: 200, height: 149 },
+  messages: { src: "/images/charla.png", width: 200, height: 155 },
+  disc: { src: "/images/cd.png", width: 300, height: 252 },
+  cart: { src: "/images/cartito.png", width: 200, height: 130 },
+  settings: { src: "/images/ajustes.png", width: 200, height: 184 },
 };
 
-const DISC_CONTENT: { textKey: PanelTextKey; view: PanelView } = {
-  textKey: "tunes",
-  view: "music",
+const ICON_CONTENT: Partial<
+  Record<PanelTextKey, { textKey: PanelTextKey; view?: PanelView }>
+> = {
+  tools: { textKey: "satchel" },
+  computer: { textKey: "local", view: "local" },
+  messages: { textKey: "chat" },
+  disc: { textKey: "tunes", view: "music" },
+  cart: { textKey: "r2ss" },
+  settings: { textKey: "settings", view: "settings" },
 };
 
 const ICON_COLS: [number, number][] = [
@@ -117,7 +128,7 @@ export const PANEL_BUTTONS: PanelButton[] = [
       id: `icon-${r * 3 + c + 1}`,
       labelKey: ICON_LABELS[r * 3 + c],
       kind: "icon" as const,
-      ...(ICON_LABELS[r * 3 + c] === "disc" ? DISC_CONTENT : {}),
+      ...ICON_CONTENT[ICON_LABELS[r * 3 + c]],
       x: left,
       y: top,
       width: right - left,

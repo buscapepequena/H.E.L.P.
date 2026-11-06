@@ -3,12 +3,8 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { formatTime, useMusic } from "@/hooks/musicContext";
-import {
-  LANG_CHANGE_EVENT,
-  LANG_STORAGE_KEY,
-  PANEL_LANGS,
-  PANEL_TEXT,
-} from "@/hooks/panelI18n";
+import { readProfile } from "@/hooks/localProfile";
+import { LANG_CHANGE_EVENT, PANEL_TEXT } from "@/hooks/panelI18n";
 import { playClick } from "@/hooks/soundEffects";
 import { PanelLang } from "@/types/panel";
 import FrameButton from "@/modules/FrameButton";
@@ -28,22 +24,13 @@ export default function MiniPlayer() {
 
   useEffect(() => {
     const read = () => {
-      let stored: string | null = null;
-      try {
-        stored = window.localStorage.getItem(LANG_STORAGE_KEY);
-      } catch {
-        stored = null;
-      }
-      if (stored && PANEL_LANGS.includes(stored as PanelLang)) {
-        setLang(stored as PanelLang);
-      }
+      void readProfile().then((profile) => {
+        if (profile.lang) setLang(profile.lang);
+      });
     };
-    const first = window.setTimeout(read, 0);
+    read();
     window.addEventListener(LANG_CHANGE_EVENT, read);
-    return () => {
-      window.clearTimeout(first);
-      window.removeEventListener(LANG_CHANGE_EVENT, read);
-    };
+    return () => window.removeEventListener(LANG_CHANGE_EVENT, read);
   }, []);
 
   if (!music.popped) return null;
@@ -112,6 +99,7 @@ export default function MiniPlayer() {
           >
             <MusicSpectrum
               bars={8}
+              spread
               className="h-[60cqh] w-[9cqw] shrink-0 max-sm:hidden"
             />
             <button

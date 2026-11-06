@@ -1,4 +1,4 @@
-import { CD_ICON, LANG_STRIP, PANEL_BUTTONS } from "@/hooks/panelButtons";
+import { LANG_STRIP, MOBILE_ICONS, PANEL_BUTTONS } from "@/hooks/panelButtons";
 import { PanelButton, PanelLayout, PanelVariant } from "@/types/panel";
 
 const byKind = (kind: PanelButton["kind"]): PanelButton[] =>
@@ -51,6 +51,7 @@ const DESKTOP: PanelVariant = {
   hole: { x: 60, y: 90, width: 904, height: 666 },
   lang: LANG_STRIP,
   avatar: { x: 46, y: 830, width: 199, height: 172 },
+  online: { x: 105, y: 1045, width: 22, height: 22 },
   buttons: PANEL_BUTTONS,
   iconUnits: 36,
   textUnits: 25,
@@ -65,6 +66,7 @@ export const PANEL_VARIANTS: Record<PanelLayout, PanelVariant> = {
     hole: { x: 74, y: 213, width: 868, height: 358 },
     lang: { x: 167, y: 1262, width: 685, height: 48 },
     avatar: { x: 75, y: 952, width: 195, height: 183 },
+    online: { x: 158, y: 1195, width: 23, height: 23 },
     buttons: placeButtons({
       navX: 70,
       navWidth: 411,
@@ -106,6 +108,7 @@ export const PANEL_VARIANTS: Record<PanelLayout, PanelVariant> = {
     ],
     lang: { x: 108, y: 2153, width: 505, height: 41 },
     avatar: { x: 44, y: 1526, width: 627, height: 369 },
+    online: { x: 97, y: 2114, width: 19, height: 19 },
     buttons: placeButtons({
       navX: 46,
       navWidth: 622,
@@ -127,7 +130,9 @@ export const PANEL_VARIANTS: Record<PanelLayout, PanelVariant> = {
       ],
       prev: [34, 2153, 56, 41],
       menu: [622, 2153, 59, 41],
-    }).map((b) => (b.view === "music" ? { ...b, icon: CD_ICON } : b)),
+    }).map((b) =>
+      b.kind === "icon" ? { ...b, icon: MOBILE_ICONS[b.labelKey] } : b,
+    ),
     iconUnits: 44,
     textUnits: 32,
     langUnits: 19,
