@@ -35,6 +35,7 @@ export type PanelTextKey =
   | "tunesTitle"
   | "noTracks"
   | "songJourney"
+  | "songJourneyLong"
   | "songDeparture"
   | "songTerms"
   | "songAlone"

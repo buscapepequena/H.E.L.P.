@@ -2,11 +2,11 @@
 
 import { makeHall } from "@/hooks/soundEffects";
 
-const BAR = 3.6;
+export const BAR = 3.6;
 const LENGTH = 16 * BAR + 6;
 const RATE = 44100;
-const THEME = [587.33, 880, 739.99, 987.77, 659.25];
-const CHORDS = [
+export const THEME = [587.33, 880, 739.99, 987.77, 659.25];
+export const CHORDS = [
   [146.83, 220, 293.66, 329.63, 440],
   [123.47, 185, 293.66, 369.99, 440],
   [98, 196, 293.66, 392, 493.88],
