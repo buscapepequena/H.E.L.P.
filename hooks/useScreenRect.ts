@@ -32,7 +32,11 @@ export const useScreenRect = () => {
     if (!root) return;
     const observer = new ResizeObserver(measure);
     observer.observe(root);
-    return () => observer.disconnect();
+    document.addEventListener("animationend", measure, true);
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("animationend", measure, true);
+    };
   }, [measure]);
 
   return { scrollRef, rootRef, screenRef, rect, measure };

@@ -154,7 +154,7 @@ const compose = (ctx: BaseAudioContext, bus: AudioNode) => {
   note(ctx, bus, bar(15) + 0.4, 587.33, 0.1, 5);
 };
 
-export const encodeWav = (buffer: AudioBuffer): Blob => {
+export const encodeWav = (buffer: AudioBuffer, fixedScale?: number): Blob => {
   const channels = buffer.numberOfChannels;
   const frames = buffer.length;
   const bytes = frames * channels * 2;
@@ -185,7 +185,7 @@ export const encodeWav = (buffer: AudioBuffer): Blob => {
       peak = Math.max(peak, Math.abs(channel[i]));
     }
   });
-  const scale = 0.88 / peak;
+  const scale = fixedScale ?? 0.88 / peak;
   let offset = 44;
   for (let i = 0; i < frames; i++) {
     for (let c = 0; c < channels; c++) {

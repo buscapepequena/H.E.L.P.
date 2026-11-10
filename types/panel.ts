@@ -13,6 +13,29 @@ export type PanelTextKey =
   | "roomsTitle"
   | "portals"
   | "portalsTitle"
+  | "portalApproach"
+  | "portalOpen"
+  | "portalEnter"
+  | "portalBack"
+  | "portalCenter"
+  | "portalZoomIn"
+  | "portalZoomOut"
+  | "portalUp"
+  | "portalDown"
+  | "portalLeft"
+  | "portalRight"
+  | "portalLight"
+  | "portalNext"
+  | "psychicAsk"
+  | "psychicReply"
+  | "psychicInsist"
+  | "psychicAskName"
+  | "psychicPuzzled"
+  | "rainContinue"
+  | "rainYes"
+  | "rainNo"
+  | "rainStay"
+  | "rainGo"
   | "mirrors"
   | "mirrorsTitle"
   | "sims"
@@ -27,6 +50,13 @@ export type PanelTextKey =
   | "roomCollapse"
   | "roomBack"
   | "mapHome"
+  | "mapHomeAtlantic"
+  | "mapFitAll"
+  | "mapLibrary"
+  | "mapFood"
+  | "mapCoffee"
+  | "mapStorage"
+  | "mapLanguages"
   | "tunes"
   | "tunesTitle"
   | "noTracks"
@@ -40,6 +70,10 @@ export type PanelTextKey =
   | "songMirrorsPulse"
   | "songMirrorsChamber"
   | "songDepths"
+  | "songWhoAreYou"
+  | "songWhoAreYouAmbient"
+  | "songWeightless"
+  | "songWeightlessLong"
   | "popOut"
   | "musicPlay"
   | "musicPause"
@@ -75,6 +109,19 @@ export interface PanelContextValue {
   lang: PanelLang;
   openRoom: (room: RoomTile) => void;
   selectLocation: (id: string) => void;
+}
+
+export interface LocalizedSources {
+  src?: string;
+  srcEn?: string;
+  srcEs?: string;
+  srcPat?: string;
+  srcKre?: string;
+}
+
+export interface LocalizedImage extends LocalizedSources {
+  width: number;
+  height: number;
 }
 
 export interface PanelIcon {
@@ -116,23 +163,10 @@ export interface SimSlot {
   video?: string;
 }
 
-export interface PortalLight {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  color: string;
-  low: number;
-  high: number;
-  seconds: number;
-  delay: number;
-  flicker?: boolean;
-}
-
 export interface RoomTile {
   id: string;
   labelKey: PanelTextKey;
-  image?: PanelIcon;
+  image?: LocalizedImage;
   sceneId?: string;
 }
 
@@ -150,6 +184,7 @@ export interface PanelVariant {
   hole: PanelCrop;
   lang: PanelCrop;
   avatar: PanelCrop;
+  speech: PanelCrop;
   online: PanelCrop;
   punch?: [number, number][];
   buttons: PanelButton[];

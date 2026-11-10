@@ -31,6 +31,9 @@ const box = (b: { x: number; y: number; width: number; height: number }) => ({
   height: `${(b.height / PLAYER.height) * 100}%`,
 });
 
+const pill =
+  "relative flex shrink-0 rounded-full border border-[#7fd9f2] px-[0.7em] py-[0.35em] text-[3cqh] uppercase tracking-[0.06em] transition-transform duration-100 active:scale-[0.95]";
+
 const pressable =
   "absolute flex items-center justify-center transition-transform duration-100 active:scale-[0.95]";
 
@@ -96,7 +99,7 @@ export default function Mp3Player({
                     playClick(1.2);
                     music.popOut();
                   }}
-                  className="relative flex shrink-0 rounded-full border border-[#7fd9f2] px-[0.7em] py-[0.35em] text-[3cqh] uppercase tracking-[0.06em] text-[#7fe6fb] transition-transform duration-100 active:scale-[0.95]"
+                  className={`${pill} text-[#7fe6fb]`}
                 >
                   {t.popOut}
                 </button>

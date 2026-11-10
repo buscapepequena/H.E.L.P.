@@ -5,6 +5,12 @@ export interface LocalProfile {
   volume?: number;
   repeat?: boolean;
   track?: PanelTextKey;
+  portal?: PortalPosition;
+}
+
+export interface PortalPosition {
+  sceneId: string;
+  step: number;
 }
 
 export interface ProfileFile {

@@ -7,16 +7,21 @@ import {
   useRef,
   useState,
 } from "react";
+import { MAP_LOCATIONS } from "@/hooks/mapLocations";
 import { MapViewState } from "@/types/map";
 import { PanDirection } from "@/types/scene";
 
-const MIN_ZOOM = 0.4;
+const MIN_ZOOM = 0.1;
+const FIT_PADDING = 90;
+const CONTROLS_GUTTER = 90;
 const MAX_ZOOM = 3;
 const ZOOM_STEP = 1.4;
 const PAN_STEP = 80;
-const LIMIT = 650;
+const LIMIT = Math.max(
+  650,
+  ...MAP_LOCATIONS.map((place) => Math.max(Math.abs(place.x), Math.abs(place.y)) + 400),
+);
 const HOME_ZOOM = 2.6;
-const HOME: MapViewState = { x: 0, y: 0, zoom: 1 };
 
 const isControl = (target: EventTarget): boolean =>
   target instanceof Element &&
@@ -32,11 +37,15 @@ const clamp = (view: MapViewState): MapViewState => {
   };
 };
 
-export const useMapView = () => {
+export const useMapView = (centerX = 0, centerY = 0) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const pointers = useRef<Map<number, { x: number; y: number }>>(new Map());
   const pinch = useRef<number | null>(null);
-  const [view, setView] = useState<MapViewState>(HOME);
+  const [view, setView] = useState<MapViewState>({
+    x: -centerX,
+    y: -centerY,
+    zoom: 1,
+  });
   const [animated, setAnimated] = useState<boolean>(false);
   const [dragging, setDragging] = useState<boolean>(false);
 
@@ -87,7 +96,36 @@ export const useMapView = () => {
 
   const reset = useCallback(() => {
     setAnimated(true);
-    setView(HOME);
+    setView({ x: -centerX, y: -centerY, zoom: 1 });
+  }, [centerX, centerY]);
+
+  const fitAll = useCallback(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const xs = MAP_LOCATIONS.map((place) => place.x);
+    const ys = MAP_LOCATIONS.map((place) => place.y);
+    const left = Math.min(...xs) - FIT_PADDING;
+    const right = Math.max(...xs) + FIT_PADDING;
+    const top = Math.min(...ys) - FIT_PADDING;
+    const bottom = Math.max(...ys) + FIT_PADDING;
+    const zoom = Math.min(
+      MAX_ZOOM,
+      Math.max(
+        MIN_ZOOM,
+        Math.min(
+          (el.clientWidth - CONTROLS_GUTTER) / (right - left),
+          el.clientHeight / (bottom - top),
+        ),
+      ),
+    );
+    setAnimated(true);
+    setView(
+      clamp({
+        zoom,
+        x: (-(left + right) / 2) * zoom - CONTROLS_GUTTER / 2,
+        y: (-(top + bottom) / 2) * zoom,
+      }),
+    );
   }, []);
 
   const focusOn = useCallback((x: number, y: number) => {
@@ -141,6 +179,7 @@ export const useMapView = () => {
     dragging,
     pan,
     reset,
+    fitAll,
     focusOn,
     zoomIn: () => zoomAt(ZOOM_STEP, 0, 0, true),
     zoomOut: () => zoomAt(1 / ZOOM_STEP, 0, 0, true),

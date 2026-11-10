@@ -2,7 +2,6 @@ import { MapGraph } from "@/types/map";
 
 export const MAP_MAX_DEPTH = 13;
 
-const SEED = 20;
 const DIRECTIONS: [number, number][] = [
   [1, 0],
   [1, 1],
@@ -21,9 +20,15 @@ const random = (seed: number): number => {
   return (h >>> 0) / 4294967296;
 };
 
-const buildGraph = (): MapGraph => {
+export const buildGraph = (
+  seed: number,
+  originX: number,
+  originY: number,
+  [minSteps, maxSteps]: [number, number],
+): MapGraph => {
   const graph: MapGraph = { segments: [], nodes: [] };
-  let counter = SEED;
+  const prefix = `g${seed}`;
+  let counter = seed;
   const next = () => random(++counter);
 
   const walk = (
@@ -48,7 +53,7 @@ const buildGraph = (): MapGraph => {
       const y2 = Math.round(y + dy * length * scale);
       depth += 1;
       graph.segments.push({
-        id: `s-${graph.segments.length}`,
+        id: `${prefix}-s-${graph.segments.length}`,
         x1: x,
         y1: y,
         x2,
@@ -62,7 +67,7 @@ const buildGraph = (): MapGraph => {
       }
     }
     graph.nodes.push({
-      id: `n-${graph.nodes.length}`,
+      id: `${prefix}-n-${graph.nodes.length}`,
       x,
       y,
       depth,
@@ -71,13 +76,43 @@ const buildGraph = (): MapGraph => {
   };
 
   DIRECTIONS.forEach((_, direction) => {
-    walk(0, 0, direction, 0, 7 + Math.floor(next() * 4));
+    walk(
+      originX,
+      originY,
+      direction,
+      0,
+      minSteps + Math.floor(next() * (maxSteps - minSteps + 1)),
+    );
   });
 
   return graph;
 };
 
-export const MAP_GRAPH: MapGraph = buildGraph();
+export const graphReach = (graph: MapGraph, cx: number, cy: number): number =>
+  Math.max(
+    1,
+    ...graph.segments.map((s) => Math.hypot(s.x2 - cx, s.y2 - cy)),
+  );
+
+export const scaleGraph = (
+  graph: MapGraph,
+  cx: number,
+  cy: number,
+  factor: number,
+): MapGraph => ({
+  segments: graph.segments.map((s) => ({
+    ...s,
+    x1: Math.round(cx + (s.x1 - cx) * factor),
+    y1: Math.round(cy + (s.y1 - cy) * factor),
+    x2: Math.round(cx + (s.x2 - cx) * factor),
+    y2: Math.round(cy + (s.y2 - cy) * factor),
+  })),
+  nodes: graph.nodes.map((n) => ({
+    ...n,
+    x: Math.round(cx + (n.x - cx) * factor),
+    y: Math.round(cy + (n.y - cy) * factor),
+  })),
+});
 
 export const mapFade = (depth: number): number =>
   Math.max(0.05, Math.pow(1 - depth / (MAP_MAX_DEPTH + 1), 1.7));

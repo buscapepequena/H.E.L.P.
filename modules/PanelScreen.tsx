@@ -9,7 +9,6 @@ import DownloadScreen from "@/modules/DownloadScreen";
 import MapScreen from "@/modules/MapScreen";
 import MapView from "@/modules/MapView";
 import Mp3Player from "@/modules/Mp3Player";
-import PortalScreen from "@/modules/PortalScreen";
 import RoomsGrid from "@/modules/RoomsGrid";
 import SettingsScreen from "@/modules/SettingsScreen";
 import SimsScreen from "@/modules/SimsScreen";
@@ -37,13 +36,12 @@ export default function PanelScreen({
       subtitle={VIEW_SCREENS[view].subtitle}
     >
       {view === "rooms" && place && (
-        <RoomsGrid rooms={place.rooms} onOpen={openRoom} t={t} />
-      )}
-      {view === "portals" && place && (
-        <PortalScreen image={place.portal[lang]} />
+        <RoomsGrid rooms={place.rooms} onOpen={openRoom} t={t} lang={lang} />
       )}
       {view === "sims" && place && <SimsScreen slots={place.sims} t={t} />}
-      {view === "map" && <MapView t={t} onSelect={selectLocation} />}
+      {view === "map" && (
+        <MapView t={t} current={place} onSelect={selectLocation} />
+      )}
       {view === "local" && <DownloadScreen t={t} />}
       {view === "settings" && <SettingsScreen t={t} />}
     </MapScreen>

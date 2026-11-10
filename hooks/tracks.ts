@@ -9,6 +9,8 @@ import {
   renderMirrorsFirst,
   renderMirrorsPulse,
 } from "@/hooks/mirrorsSong";
+import { renderWeightlessLongSong, renderWeightlessSong } from "@/hooks/weightlessSong";
+import { renderWhoAreYouAmbient, renderWhoAreYouSong } from "@/hooks/whoAreYouSong";
 import { renderWarriorSong } from "@/hooks/warriorSong";
 import { Track } from "@/types/music";
 
@@ -80,5 +82,57 @@ export const TRACKS: Track[] = [
     src: "/music/depths.mp3",
     render: renderDepthsSong,
     image: { src: "/images/depths.png", width: 1254, height: 1254 },
+  },
+  {
+    titleKey: "songWhoAreYouAmbient",
+    render: renderWhoAreYouAmbient,
+    loop: true,
+    hidden: true,
+    image: {
+      srcEn: "/images/psiquico-en.png",
+      srcEs: "/images/psiquico-es.png",
+      srcPat: "/images/psiquico-pat.png",
+      srcKre: "/images/psiquico-kre.png",
+      width: 1585,
+      height: 992,
+    },
+  },
+  {
+    titleKey: "songWhoAreYou",
+    render: renderWhoAreYouSong,
+    loop: true,
+    image: {
+      srcEn: "/images/psiquico-en.png",
+      srcEs: "/images/psiquico-es.png",
+      srcPat: "/images/psiquico-pat.png",
+      srcKre: "/images/psiquico-kre.png",
+      width: 1585,
+      height: 992,
+    },
+  },
+  {
+    titleKey: "songWeightless",
+    render: renderWeightlessSong,
+    loop: true,
+    image: {
+      srcEn: "/images/psiquico-en.png",
+      srcEs: "/images/psiquico-es.png",
+      srcPat: "/images/psiquico-pat.png",
+      srcKre: "/images/psiquico-kre.png",
+      width: 1585,
+      height: 992,
+    },
+  },
+  {
+    titleKey: "songWeightlessLong",
+    render: renderWeightlessLongSong,
+    image: {
+      srcEn: "/images/psiquico-en.png",
+      srcEs: "/images/psiquico-es.png",
+      srcPat: "/images/psiquico-pat.png",
+      srcKre: "/images/psiquico-kre.png",
+      width: 1585,
+      height: 992,
+    },
   },
 ];

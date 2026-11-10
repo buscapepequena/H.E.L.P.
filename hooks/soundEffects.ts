@@ -2,7 +2,7 @@
 
 let context: AudioContext | null = null;
 
-const getContext = (): AudioContext | null => {
+export const getContext = (): AudioContext | null => {
   if (typeof window === "undefined") return null;
   if (!context) {
     const Ctor =
@@ -330,6 +330,505 @@ export const playJourney = (duration = 8) => {
       osc.connect(part).connect(gain);
       osc.start(t);
       osc.stop(t + 2.2);
+    });
+  });
+};
+
+export const playLibrary = (duration = 8) => {
+  const ctx = getContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  const end = now + duration;
+  const pace = duration / 5;
+
+  const hall = makeHall(ctx, 4.6);
+  const wet = ctx.createGain();
+  wet.gain.value = 0.9;
+  const dry = ctx.createGain();
+  dry.gain.value = 0.5;
+  hall.connect(wet).connect(ctx.destination);
+  dry.connect(ctx.destination);
+  const send = ctx.createGain();
+  send.connect(hall);
+  send.connect(dry);
+
+  const pad = ctx.createBiquadFilter();
+  pad.type = "lowpass";
+  pad.frequency.setValueAtTime(260, now);
+  pad.frequency.exponentialRampToValueAtTime(1300, now + duration * 0.55);
+  pad.frequency.exponentialRampToValueAtTime(380, end);
+  const padGain = ctx.createGain();
+  padGain.gain.setValueAtTime(0.0001, now);
+  padGain.gain.exponentialRampToValueAtTime(0.09, now + duration * 0.4);
+  padGain.gain.exponentialRampToValueAtTime(0.0001, end);
+  pad.connect(padGain).connect(send);
+  [174.61, 261.63, 349.23, 392, 523.25].forEach((freq, i) => {
+    [-4, 4].forEach((cents) => {
+      const osc = ctx.createOscillator();
+      osc.type = i % 2 ? "sine" : "triangle";
+      osc.frequency.value = freq;
+      osc.detune.value = cents;
+      osc.connect(pad);
+      osc.start(now);
+      osc.stop(end + 0.05);
+    });
+  });
+
+  [
+    [0.1, 698.46],
+    [0.6, 880],
+    [1.1, 1046.5],
+    [1.75, 783.99],
+    [2.4, 932.33],
+    [3.1, 698.46],
+    [3.8, 1174.66],
+  ].forEach(([at, freq]) => {
+    const t = now + at * pace;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.11, t + 0.006);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 2.6);
+    gain.connect(send);
+    [
+      [1, "sine", 1],
+      [3.01, "sine", 0.22],
+      [5.4, "sine", 0.06],
+    ].forEach(([ratio, type, level]) => {
+      const osc = ctx.createOscillator();
+      const part = ctx.createGain();
+      osc.type = type as OscillatorType;
+      osc.frequency.value = freq * (ratio as number);
+      part.gain.value = level as number;
+      osc.connect(part).connect(gain);
+      osc.start(t);
+      osc.stop(t + 2.7);
+    });
+  });
+
+  const pageLength = Math.floor(ctx.sampleRate * 0.3);
+  const pageBuffer = ctx.createBuffer(1, pageLength, ctx.sampleRate);
+  const pageData = pageBuffer.getChannelData(0);
+  for (let i = 0; i < pageLength; i++) pageData[i] = Math.random() * 2 - 1;
+  [0.5, 1.4, 2.2, 2.9, 3.6, 4.3].forEach((at, i) => {
+    const t = now + at * pace;
+    const page = ctx.createBufferSource();
+    page.buffer = pageBuffer;
+    page.playbackRate.value = 0.8 + (i % 3) * 0.15;
+    const band = ctx.createBiquadFilter();
+    band.type = "bandpass";
+    band.frequency.setValueAtTime(1800, t);
+    band.frequency.exponentialRampToValueAtTime(4200, t + 0.22);
+    band.Q.value = 0.9;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.05, t + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+    page.connect(band).connect(gain).connect(send);
+    page.start(t);
+    page.stop(t + 0.32);
+  });
+};
+
+export const playFood = (duration = 8) => {
+  const ctx = getContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  const end = now + duration;
+  const pace = duration / 5;
+
+  const hall = makeHall(ctx, 3.8);
+  const wet = ctx.createGain();
+  wet.gain.value = 0.8;
+  const dry = ctx.createGain();
+  dry.gain.value = 0.6;
+  hall.connect(wet).connect(ctx.destination);
+  dry.connect(ctx.destination);
+  const send = ctx.createGain();
+  send.connect(hall);
+  send.connect(dry);
+
+  const pad = ctx.createBiquadFilter();
+  pad.type = "lowpass";
+  pad.frequency.setValueAtTime(280, now);
+  pad.frequency.exponentialRampToValueAtTime(1700, now + duration * 0.5);
+  pad.frequency.exponentialRampToValueAtTime(450, end);
+  const padGain = ctx.createGain();
+  padGain.gain.setValueAtTime(0.0001, now);
+  padGain.gain.exponentialRampToValueAtTime(0.09, now + duration * 0.4);
+  padGain.gain.exponentialRampToValueAtTime(0.0001, end);
+  pad.connect(padGain).connect(send);
+  [146.83, 220, 293.66, 369.99, 440].forEach((freq, i) => {
+    [-3, 3].forEach((cents) => {
+      const osc = ctx.createOscillator();
+      osc.type = i % 2 ? "sine" : "triangle";
+      osc.frequency.value = freq;
+      osc.detune.value = cents;
+      osc.connect(pad);
+      osc.start(now);
+      osc.stop(end + 0.05);
+    });
+  });
+
+  [
+    [0.1, 587.33],
+    [0.7, 739.99],
+    [1.3, 880],
+    [2, 739.99],
+    [2.7, 987.77],
+    [3.5, 880],
+    [4.1, 1174.66],
+  ].forEach(([at, freq]) => {
+    const t = now + at * pace;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.13, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.9);
+    gain.connect(send);
+    [
+      [1, "triangle", 1],
+      [2, "sine", 0.3],
+    ].forEach(([ratio, type, level]) => {
+      const osc = ctx.createOscillator();
+      const part = ctx.createGain();
+      osc.type = type as OscillatorType;
+      osc.frequency.value = freq * (ratio as number);
+      part.gain.value = level as number;
+      osc.connect(part).connect(gain);
+      osc.start(t);
+      osc.stop(t + 2);
+    });
+  });
+
+  [0.9, 2.3, 3.9].forEach((at, i) => {
+    const t = now + at * pace;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.045, t + 0.003);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
+    gain.connect(send);
+    [1, 2.76, 5.4, 8.93].forEach((ratio, k) => {
+      const osc = ctx.createOscillator();
+      const part = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = (1318.51 + i * 110) * ratio;
+      part.gain.value = 1 / (k + 1.5);
+      osc.connect(part).connect(gain);
+      osc.start(t);
+      osc.stop(t + 1.5);
+    });
+  });
+};
+
+export const playCoffee = (duration = 8) => {
+  const ctx = getContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  const end = now + duration;
+  const pace = duration / 5;
+
+  const hall = makeHall(ctx, 3.4);
+  const wet = ctx.createGain();
+  wet.gain.value = 0.75;
+  const dry = ctx.createGain();
+  dry.gain.value = 0.6;
+  hall.connect(wet).connect(ctx.destination);
+  dry.connect(ctx.destination);
+  const send = ctx.createGain();
+  send.connect(hall);
+  send.connect(dry);
+
+  const pad = ctx.createBiquadFilter();
+  pad.type = "lowpass";
+  pad.frequency.setValueAtTime(300, now);
+  pad.frequency.exponentialRampToValueAtTime(1400, now + duration * 0.5);
+  pad.frequency.exponentialRampToValueAtTime(420, end);
+  const padGain = ctx.createGain();
+  padGain.gain.setValueAtTime(0.0001, now);
+  padGain.gain.exponentialRampToValueAtTime(0.085, now + duration * 0.4);
+  padGain.gain.exponentialRampToValueAtTime(0.0001, end);
+  pad.connect(padGain).connect(send);
+  [130.81, 196, 261.63, 329.63, 493.88].forEach((freq, i) => {
+    [-3, 3].forEach((cents) => {
+      const osc = ctx.createOscillator();
+      osc.type = i % 2 ? "sine" : "triangle";
+      osc.frequency.value = freq;
+      osc.detune.value = cents;
+      osc.connect(pad);
+      osc.start(now);
+      osc.stop(end + 0.05);
+    });
+  });
+
+  [
+    [0.1, 523.25],
+    [0.75, 659.25],
+    [1.4, 783.99],
+    [2.1, 987.77],
+    [2.9, 783.99],
+    [3.6, 659.25],
+    [4.2, 1046.5],
+  ].forEach(([at, freq]) => {
+    const t = now + at * pace;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.12, t + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.8);
+    gain.connect(send);
+    [
+      [1, "triangle", 1],
+      [2, "sine", 0.25],
+    ].forEach(([ratio, type, level]) => {
+      const osc = ctx.createOscillator();
+      const part = ctx.createGain();
+      osc.type = type as OscillatorType;
+      osc.frequency.value = freq * (ratio as number);
+      part.gain.value = level as number;
+      osc.connect(part).connect(gain);
+      osc.start(t);
+      osc.stop(t + 1.9);
+    });
+  });
+
+  const bubbleLength = Math.floor(ctx.sampleRate * 0.12);
+  const bubbleBuffer = ctx.createBuffer(1, bubbleLength, ctx.sampleRate);
+  const bubbleData = bubbleBuffer.getChannelData(0);
+  for (let i = 0; i < bubbleLength; i++) bubbleData[i] = Math.random() * 2 - 1;
+  Array.from({ length: 14 }, (_, i) => 0.3 + i * 0.32).forEach((at, i) => {
+    const t = now + at * pace * 0.9;
+    const bubble = ctx.createBufferSource();
+    bubble.buffer = bubbleBuffer;
+    const band = ctx.createBiquadFilter();
+    band.type = "bandpass";
+    band.frequency.setValueAtTime(500 + (i % 4) * 140, t);
+    band.frequency.exponentialRampToValueAtTime(1300 + (i % 3) * 200, t + 0.1);
+    band.Q.value = 9;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.09, t + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+    bubble.connect(band).connect(gain).connect(send);
+    bubble.start(t);
+    bubble.stop(t + 0.13);
+  });
+};
+
+export const playStorage = (duration = 8) => {
+  const ctx = getContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  const end = now + duration;
+  const pace = duration / 5;
+
+  const hall = makeHall(ctx, 4);
+  const wet = ctx.createGain();
+  wet.gain.value = 0.8;
+  const dry = ctx.createGain();
+  dry.gain.value = 0.55;
+  hall.connect(wet).connect(ctx.destination);
+  dry.connect(ctx.destination);
+  const send = ctx.createGain();
+  send.connect(hall);
+  send.connect(dry);
+
+  const pad = ctx.createBiquadFilter();
+  pad.type = "lowpass";
+  pad.frequency.setValueAtTime(260, now);
+  pad.frequency.exponentialRampToValueAtTime(1500, now + duration * 0.5);
+  pad.frequency.exponentialRampToValueAtTime(400, end);
+  const padGain = ctx.createGain();
+  padGain.gain.setValueAtTime(0.0001, now);
+  padGain.gain.exponentialRampToValueAtTime(0.09, now + duration * 0.4);
+  padGain.gain.exponentialRampToValueAtTime(0.0001, end);
+  pad.connect(padGain).connect(send);
+  [155.56, 233.08, 311.13, 392, 466.16].forEach((freq, i) => {
+    [-3, 3].forEach((cents) => {
+      const osc = ctx.createOscillator();
+      osc.type = i % 2 ? "sine" : "triangle";
+      osc.frequency.value = freq;
+      osc.detune.value = cents;
+      osc.connect(pad);
+      osc.start(now);
+      osc.stop(end + 0.05);
+    });
+  });
+
+  [
+    [0.1, 622.25],
+    [0.8, 783.99],
+    [1.5, 932.33],
+    [2.3, 783.99],
+    [3, 1046.5],
+    [3.8, 932.33],
+  ].forEach(([at, freq]) => {
+    const t = now + at * pace;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.12, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 2);
+    gain.connect(send);
+    [
+      [1, "triangle", 1],
+      [2, "sine", 0.26],
+    ].forEach(([ratio, type, level]) => {
+      const osc = ctx.createOscillator();
+      const part = ctx.createGain();
+      osc.type = type as OscillatorType;
+      osc.frequency.value = freq * (ratio as number);
+      part.gain.value = level as number;
+      osc.connect(part).connect(gain);
+      osc.start(t);
+      osc.stop(t + 2.1);
+    });
+  });
+
+  [0.6, 1.9, 3.3, 4.4].forEach((at, i) => {
+    const t = now + at * pace;
+    const thump = ctx.createOscillator();
+    thump.type = "sine";
+    thump.frequency.setValueAtTime(150 - i * 8, t);
+    thump.frequency.exponentialRampToValueAtTime(60, t + 0.18);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.16, t + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+    thump.connect(gain).connect(send);
+    thump.start(t);
+    thump.stop(t + 0.27);
+  });
+};
+
+export const playLanguages = (duration = 8) => {
+  const ctx = getContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  const end = now + duration;
+  const pace = duration / 5;
+
+  const hall = makeHall(ctx, 3.6);
+  const wet = ctx.createGain();
+  wet.gain.value = 0.8;
+  const dry = ctx.createGain();
+  dry.gain.value = 0.55;
+  hall.connect(wet).connect(ctx.destination);
+  dry.connect(ctx.destination);
+  const send = ctx.createGain();
+  send.connect(hall);
+  send.connect(dry);
+
+  const pad = ctx.createBiquadFilter();
+  pad.type = "lowpass";
+  pad.frequency.setValueAtTime(280, now);
+  pad.frequency.exponentialRampToValueAtTime(1600, now + duration * 0.5);
+  pad.frequency.exponentialRampToValueAtTime(420, end);
+  const padGain = ctx.createGain();
+  padGain.gain.setValueAtTime(0.0001, now);
+  padGain.gain.exponentialRampToValueAtTime(0.085, now + duration * 0.4);
+  padGain.gain.exponentialRampToValueAtTime(0.0001, end);
+  pad.connect(padGain).connect(send);
+  [174.61, 261.63, 349.23, 440, 523.25].forEach((freq, i) => {
+    [-3, 3].forEach((cents) => {
+      const osc = ctx.createOscillator();
+      osc.type = i % 2 ? "sine" : "triangle";
+      osc.frequency.value = freq;
+      osc.detune.value = cents;
+      osc.connect(pad);
+      osc.start(now);
+      osc.stop(end + 0.05);
+    });
+  });
+
+  [
+    [0.1, 698.46],
+    [0.7, 880],
+    [1.4, 1046.5],
+    [2.1, 880],
+    [2.8, 1174.66],
+    [3.6, 1046.5],
+    [4.2, 1396.91],
+  ].forEach(([at, freq]) => {
+    const t = now + at * pace;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.11, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.9);
+    gain.connect(send);
+    [
+      [1, "triangle", 1],
+      [2, "sine", 0.25],
+    ].forEach(([ratio, type, level]) => {
+      const osc = ctx.createOscillator();
+      const part = ctx.createGain();
+      osc.type = type as OscillatorType;
+      osc.frequency.value = freq * (ratio as number);
+      part.gain.value = level as number;
+      osc.connect(part).connect(gain);
+      osc.start(t);
+      osc.stop(t + 2);
+    });
+  });
+
+  const VOWELS = [
+    [730, 1090],
+    [270, 2290],
+    [570, 840],
+    [300, 870],
+    [530, 1840],
+  ];
+  Array.from({ length: 16 }, (_, i) => 0.4 + i * 0.27).forEach((at, i) => {
+    const t = now + at * pace;
+    const voice = ctx.createOscillator();
+    voice.type = "sawtooth";
+    voice.frequency.setValueAtTime(220 + (i % 3) * 30, t);
+    voice.frequency.exponentialRampToValueAtTime(260 + (i % 4) * 25, t + 0.14);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.05, t + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+    VOWELS[i % VOWELS.length].forEach((formant) => {
+      const band = ctx.createBiquadFilter();
+      band.type = "bandpass";
+      band.frequency.value = formant;
+      band.Q.value = 8;
+      voice.connect(band).connect(gain);
+    });
+    gain.connect(send);
+    voice.start(t);
+    voice.stop(t + 0.18);
+  });
+};
+
+export const playDing = () => {
+  const ctx = getContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  const hall = makeHall(ctx, 1.6);
+  const wet = ctx.createGain();
+  wet.gain.value = 0.45;
+  hall.connect(wet).connect(ctx.destination);
+  [
+    [0, 1318.51],
+    [0.42, 1046.5],
+  ].forEach(([at, freq]) => {
+    const t = now + at;
+    const out = ctx.createGain();
+    out.connect(ctx.destination);
+    out.connect(hall);
+    [
+      [1, 0.16],
+      [2.76, 0.035],
+      [5.4, 0.01],
+    ].forEach(([ratio, level]) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const ring = 1.6 / Math.sqrt(ratio);
+      osc.type = "sine";
+      osc.frequency.value = freq * ratio;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(level, t + 0.004);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + ring);
+      osc.connect(gain).connect(out);
+      osc.start(t);
+      osc.stop(t + ring + 0.02);
     });
   });
 };

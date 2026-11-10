@@ -36,13 +36,16 @@ const baseScale = (scene: Scene, size: Size): number =>
   Math.max(size.width / scene.width, size.height / scene.height);
 
 const clampView = (view: ViewState, scene: Scene, size: Size): ViewState => {
-  const zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, view.zoom));
+  const zoom = Math.min(scene.maxZoom ?? MAX_ZOOM, Math.max(MIN_ZOOM, view.zoom));
   const scale = baseScale(scene, size) * zoom;
   const minX = Math.min(0, size.width - scene.width * scale);
   const minY = Math.min(0, size.height - scene.height * scale);
   return {
     zoom,
-    x: scene.fold ? view.x : Math.min(0, Math.max(minX, view.x)),
+    x:
+      (scene.fold && !scene.fold.open) || scene.wrap
+        ? view.x
+        : Math.min(0, Math.max(minX, view.x)),
     y: Math.min(0, Math.max(minY, view.y)),
   };
 };
@@ -179,7 +182,10 @@ export const useStreetView = (
       setAnimated(animate);
       setView((v) => {
         const s = baseScale(scene, size);
-        const zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, v.zoom * factor));
+        const zoom = Math.min(
+          scene.maxZoom ?? MAX_ZOOM,
+          Math.max(MIN_ZOOM, v.zoom * factor),
+        );
         const ix = (cx - v.x) / (s * v.zoom);
         const iy = (cy - v.y) / (s * v.zoom);
         return clampView(
@@ -298,6 +304,63 @@ export const useStreetView = (
         );
         setFading(false);
         navigating.current = false;
+      }, FADE_DURATION);
+    },
+    [scenes, scene, size, clearFocus],
+  );
+
+  const jumpTo = useCallback(
+    (targetId: string, zoom: number, fx: number, fy: number) => {
+      const target = scenes.find((s) => s.id === targetId);
+      if (!target || !size.width) return;
+      clearFocus();
+      sceneRef.current = target;
+      setAnimated(false);
+      setSceneId(target.id);
+      setView(focusView(target, size, zoom, fx, fy));
+    },
+    [scenes, size, clearFocus],
+  );
+
+  const lookAt = useCallback(
+    (zoom: number, fx: number, fy: number, ms: number) => {
+      if (!size.width || navigating.current) return;
+      clearFocus();
+      setMotion({ ms, easing: DEFAULT_EASING });
+      setAnimated(true);
+      setView(focusView(scene, size, zoom, fx, fy));
+      window.setTimeout(
+        () => setMotion({ ms: ZOOM_DURATION, easing: DEFAULT_EASING }),
+        ms,
+      );
+    },
+    [scene, size, clearFocus],
+  );
+
+  const retreat = useCallback(
+    (targetId?: string) => {
+      const target = scenes.find((s) => s.id === targetId);
+      if (!target || !size.width || navigating.current) return;
+      const link = target.links.find((l) => l.to === scene.id);
+      clearFocus();
+      navigating.current = true;
+      setFading(true);
+      window.setTimeout(() => {
+        setAnimated(false);
+        setSceneId(target.id);
+        setView(
+          link
+            ? focusView(target, size, NAV_ZOOM, link.x, link.y)
+            : focusView(target, size, 1, target.focus.x, target.focus.y),
+        );
+        window.setTimeout(() => {
+          setAnimated(true);
+          setView(focusView(target, size, 1, target.focus.x, target.focus.y));
+          setFading(false);
+          window.setTimeout(() => {
+            navigating.current = false;
+          }, ZOOM_DURATION);
+        }, 40);
       }, FADE_DURATION);
     },
     [scenes, scene, size, clearFocus],
@@ -459,13 +522,16 @@ export const useStreetView = (
     overlayVisible,
     focusOn,
     goTo,
+    retreat,
+    jumpTo,
+    lookAt,
     diveInto,
     intro,
     finishIntro,
     transition: animated ? `transform ${motion.ms}ms ${motion.easing}` : "none",
     duration: ZOOM_DURATION,
     fadeDuration: FADE_DURATION,
-    canZoomIn: view.zoom < MAX_ZOOM - 0.001,
+    canZoomIn: view.zoom < (scene.maxZoom ?? MAX_ZOOM) - 0.001,
     canZoomOut: view.zoom > MIN_ZOOM + 0.001,
     zoomIn,
     zoomOut,

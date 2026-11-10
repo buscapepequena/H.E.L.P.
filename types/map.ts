@@ -1,10 +1,5 @@
-import {
-  PanelIcon,
-  PanelLang,
-  PanelTextKey,
-  RoomTile,
-  SimSlot,
-} from "@/types/panel";
+import { PanelTextKey, RoomTile, SimSlot } from "@/types/panel";
+import { Scene } from "@/types/scene";
 
 export interface MapLocation {
   id: string;
@@ -15,7 +10,38 @@ export interface MapLocation {
   y: number;
   rooms: RoomTile[];
   sims: SimSlot[];
-  portal: Record<PanelLang, PanelIcon>;
+  portal?: Scene[];
+  rain: string;
+  sound: MapSound;
+  network?: MapNetwork;
+}
+
+export type MapSound =
+  | "journey"
+  | "library"
+  | "food"
+  | "coffee"
+  | "storage"
+  | "languages";
+
+export interface MapNetwork {
+  seed: number;
+  steps: [number, number];
+  line: string;
+  glow: string;
+  pulse: string;
+}
+
+export interface MapRoute {
+  id: string;
+  from: string;
+  to: string;
+  lane: number;
+}
+
+export interface GeoPoint {
+  lat: number;
+  lon: number;
 }
 
 export interface MapSegment {

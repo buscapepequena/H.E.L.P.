@@ -70,15 +70,6 @@ export const VIEW_SCREENS: Record<
   settings: { titleKey: "settings", subtitle: "メモリー" },
 };
 
-export const MOBILE_ICONS: Partial<Record<PanelTextKey, PanelIcon>> = {
-  tools: { src: "/images/herramientas.png", width: 200, height: 171 },
-  computer: { src: "/images/ordenador.png", width: 200, height: 149 },
-  messages: { src: "/images/charla.png", width: 200, height: 155 },
-  disc: { src: "/images/cd.png", width: 300, height: 252 },
-  cart: { src: "/images/cartito.png", width: 200, height: 130 },
-  settings: { src: "/images/ajustes.png", width: 200, height: 184 },
-};
-
 const ICON_CONTENT: Partial<
   Record<PanelTextKey, { textKey: PanelTextKey; view?: PanelView }>
 > = {

@@ -28,6 +28,10 @@ import { useMusic } from "@/hooks/musicContext";
 import FramedGif from "@/modules/FramedGif";
 import PanelPlane from "@/modules/PanelPlane";
 import RoomViewer from "@/modules/RoomViewer";
+import PortalScreen from "@/modules/PortalScreen";
+import RosettaCard from "@/modules/RosettaCard";
+import RosettaSpeech from "@/modules/RosettaSpeech";
+import StreetView from "@/modules/StreetView";
 import PanelButtons from "@/modules/PanelButtons";
 import PencilCursor from "@/modules/PencilCursor";
 
@@ -61,6 +65,7 @@ export default function HelpPanel({ children }: { children: ReactNode }) {
   const [expanded, setExpanded] = useState<boolean>(false);
   const [raised, setRaised] = useState<boolean>(false);
   const [butterflies, setButterflies] = useState<boolean>(false);
+  const [speech, setSpeech] = useState<string | null>(null);
   const butterfliesTimer = useRef<number | null>(null);
   const { scrollRef, rootRef, screenRef, rect, measure } = useScreenRect();
   const layout = usePanelLayout();
@@ -79,7 +84,7 @@ export default function HelpPanel({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     measure();
-  }, [layout, measure]);
+  }, [layout, view, measure]);
 
   useEffect(() => {
     PANEL_BUTTONS.forEach((button) => {
@@ -217,7 +222,10 @@ export default function HelpPanel({ children }: { children: ReactNode }) {
   };
 
   const stacked = layout === "mobile" || layout === "tablet";
-  const passThrough = roomScene ? "pointer-events-none" : "";
+  const portal =
+    view === "portals" && !roomScene ? findLocation(location)?.portal : undefined;
+  const covered = Boolean(roomScene || portal);
+  const passThrough = covered ? "pointer-events-none" : "";
   const variant = PANEL_VARIANTS[layout];
   const { image, hole } = variant;
   const ratio = image.width / image.height;
@@ -235,7 +243,7 @@ export default function HelpPanel({ children }: { children: ReactNode }) {
         top: pct(hole.y, image.height),
         width: pct(hole.width, image.width),
         height: pct(hole.height, image.height),
-        visibility: roomScene ? "hidden" : "visible",
+        visibility: covered ? "hidden" : "visible",
       }}
     >
       <div className="screen-on absolute inset-0 flex bg-[radial-gradient(ellipse_at_center,#2a2152_0%,#0d0a1c_75%)]" />
@@ -311,7 +319,6 @@ export default function HelpPanel({ children }: { children: ReactNode }) {
       {roomScene && rect && (
         <RoomViewer
           key={roomScene}
-          sceneId={roomScene}
           rect={rect}
           expanded={expanded}
           raised={raised}
@@ -323,10 +330,42 @@ export default function HelpPanel({ children }: { children: ReactNode }) {
           onSettled={() => {
             if (!expanded) setRaised(false);
           }}
-          onEnter={closeRoom}
           t={t}
-        />
+        >
+          <StreetView
+            startId={roomScene}
+            embedded
+            compact={!expanded}
+            lang={lang}
+            onEnter={closeRoom}
+          />
+        </RoomViewer>
       )}
+      {portal && rect && (
+        <RoomViewer
+          key={`portal-${location}`}
+          rect={rect}
+          expanded={expanded}
+          raised={raised}
+          onToggle={toggleExpanded}
+          onBack={closeRoom}
+          onSettled={() => {
+            if (!expanded) setRaised(false);
+          }}
+          t={t}
+          tools={false}
+        >
+          <PortalScreen
+            scenes={portal}
+            t={t}
+            lang={lang}
+            expanded={expanded}
+            onToggle={toggleExpanded}
+            onSpeak={setSpeech}
+          />
+        </RoomViewer>
+      )}
+      {portal && expanded && speech && <RosettaCard key={speech} text={speech} />}
       <PanelPlane
         image={image}
         punch={variant.punch}
@@ -349,6 +388,14 @@ export default function HelpPanel({ children }: { children: ReactNode }) {
           }}
         />
         {langButton}
+        {speech && (
+          <RosettaSpeech
+            key={speech}
+            text={speech}
+            box={variant.speech}
+            image={image}
+          />
+        )}
         <button
           type="button"
           aria-label="Rosetta"

@@ -1,16 +1,28 @@
 "use client";
 
 import Image from "next/image";
-import { CSSProperties } from "react";
+import { CSSProperties, ReactNode } from "react";
+import { PANEL_TEXT } from "@/hooks/panelI18n";
 import { foldCamera, wallOrigins } from "@/hooks/sceneFold";
+import { localizedSrc } from "@/hooks/trackArt";
+import { PanelLang } from "@/types/panel";
 import { Scene, SceneFold, SceneTile, Size, ViewState } from "@/types/scene";
+import LiftPanel from "@/modules/LiftPanel";
 
 const SKIRT = 320;
 
-function WallImage({ tile, style }: { tile: SceneTile; style: CSSProperties }) {
+function WallImage({
+  tile,
+  lang,
+  style,
+}: {
+  tile: SceneTile;
+  lang: PanelLang;
+  style: CSSProperties;
+}) {
   return (
     <Image
-      src={tile.src}
+      src={localizedSrc(tile, lang) ?? tile.src}
       alt=""
       width={Math.round(tile.width)}
       height={Math.round(tile.height)}
@@ -31,12 +43,16 @@ function WallImage({ tile, style }: { tile: SceneTile; style: CSSProperties }) {
 
 function Wall({
   tile,
+  lang,
   width,
   transform,
+  children,
 }: {
   tile: SceneTile;
+  lang: PanelLang;
   width: number;
   transform: string;
+  children?: ReactNode;
 }) {
   return (
     <div
@@ -50,13 +66,16 @@ function Wall({
     >
       <WallImage
         tile={tile}
+        lang={lang}
         style={{ top: SKIRT - tile.height, transform: "scaleY(-1)" }}
       />
-      <WallImage tile={tile} style={{ top: SKIRT }} />
+      <WallImage tile={tile} lang={lang} style={{ top: SKIRT }} />
       <WallImage
         tile={tile}
+        lang={lang}
         style={{ top: SKIRT + tile.height, transform: "scaleY(-1)" }}
       />
+      {children}
     </div>
   );
 }
@@ -64,6 +83,7 @@ function Wall({
 export default function SceneCorner({
   scene,
   fold,
+  lang,
   view,
   scale,
   size,
@@ -72,6 +92,7 @@ export default function SceneCorner({
 }: {
   scene: Scene;
   fold: SceneFold;
+  lang: PanelLang;
   view: ViewState;
   scale: number;
   size: Size;
@@ -104,11 +125,24 @@ export default function SceneCorner({
           const [x, z] = origins[i];
           return (
             <Wall
-              key={tile.src}
+              key={`${tile.src}-${i}`}
               tile={tile}
+              lang={lang}
               width={end - start}
               transform={`translate3d(${x}px, 0, ${z}px) rotateY(${i * -90}deg)`}
-            />
+            >
+              {scene.lifts
+                ?.filter((lift) => lift.wall === i)
+                .map((lift) => (
+                  <LiftPanel
+                    key={lift.id}
+                    lift={lift}
+                    offsetX={tile.cropLeft ?? 0}
+                    offsetY={SKIRT}
+                    label={PANEL_TEXT[lang].roomElevator}
+                  />
+                ))}
+            </Wall>
           );
         })}
       </div>

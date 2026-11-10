@@ -1,11 +1,13 @@
+import { LocalizedSources, PanelTextKey } from "@/types/panel";
+
 export interface SceneLink {
   to: string;
   label: string;
   x: number;
   y: number;
   rotation: number;
+  labelKey?: PanelTextKey;
 }
-
 export interface SceneClock {
   x: number;
   y: number;
@@ -57,7 +59,7 @@ export interface ClockTime {
   seconds: number;
 }
 
-export interface SceneTile {
+export interface SceneTile extends LocalizedSources {
   src: string;
   x: number;
   y: number;
@@ -65,6 +67,7 @@ export interface SceneTile {
   height: number;
   fadeRight?: number;
   cropLeft?: number;
+  span?: number;
 }
 
 export interface SceneStitch {
@@ -85,6 +88,23 @@ export interface ScenePipe {
 export interface SceneFold {
   seams: number[];
   depth: number;
+  open?: boolean;
+}
+
+export interface SceneLift {
+  id: string;
+  wall: number;
+  display: { x: number; y: number; width: number; height: number };
+  button: { x: number; y: number; radius: number };
+  floor: number;
+  target: number;
+}
+
+export interface LiftState {
+  floor: number;
+  stops: number[];
+  called: boolean;
+  restUntil: number;
 }
 
 export interface FoldCamera {
@@ -108,6 +128,24 @@ export interface Scene {
   pipes?: ScenePipe[];
   stitches?: SceneStitch[];
   fold?: SceneFold;
+  lifts?: SceneLift[];
+  parent?: string;
+  wrap?: boolean;
+  glimmers?: SceneGlimmer[];
+  maxZoom?: number;
+  dialogue?: SceneLine[];
+}
+
+export interface SceneLine {
+  key: PanelTextKey;
+  speaker: "sign" | "rosetta";
+}
+
+export interface SceneGlimmer {
+  x: number;
+  y: number;
+  zoom: number;
+  size: number;
 }
 
 export interface ViewState {

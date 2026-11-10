@@ -13,6 +13,11 @@ export const cleanProfile = (raw: LocalProfile): LocalProfile => ({
     : {}),
   ...(typeof raw.repeat === "boolean" ? { repeat: raw.repeat } : {}),
   ...(typeof raw.track === "string" ? { track: raw.track } : {}),
+  ...(raw.portal &&
+  typeof raw.portal.sceneId === "string" &&
+  typeof raw.portal.step === "number"
+    ? { portal: { sceneId: raw.portal.sceneId, step: raw.portal.step } }
+    : {}),
 });
 
 export const packProfile = (profile: LocalProfile): string => {

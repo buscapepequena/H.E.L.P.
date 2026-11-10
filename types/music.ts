@@ -1,15 +1,5 @@
 import { RefObject } from "react";
-import { PanelTextKey } from "@/types/panel";
-
-export interface TrackImage {
-  src?: string;
-  srcEn?: string;
-  srcEs?: string;
-  srcPat?: string;
-  srcKre?: string;
-  width: number;
-  height: number;
-}
+import { LocalizedImage, PanelTextKey } from "@/types/panel";
 
 export interface MirrorsVersion {
   turn: number[];
@@ -22,11 +12,29 @@ export interface MirrorsVersion {
   dry: number;
 }
 
+export interface WeightlessShape {
+  length: number;
+  energy: (t: number) => number;
+  bend: (t: number) => number;
+  lift: (t: number) => number;
+  chordAt: (t: number) => number[];
+  soar: (t: number) => number;
+  shimmer: (t: number) => number;
+}
+
+export interface PhraseNote {
+  at: number;
+  midi: number;
+  length: number;
+}
+
 export interface Track {
   titleKey: PanelTextKey;
   src?: string;
   render?: () => Promise<string>;
-  image?: TrackImage;
+  image?: LocalizedImage;
+  loop?: boolean;
+  hidden?: boolean;
 }
 
 export interface MusicContextValue {
@@ -42,6 +50,9 @@ export interface MusicContextValue {
   toggle: () => void;
   next: () => void;
   prev: () => void;
+  playTrack: (key: PanelTextKey) => void;
+  crossfadeTo: (key: PanelTextKey, ms?: number) => void;
+  pauseTrack: (key: PanelTextKey) => void;
   seek: (fraction: number) => void;
   setVolume: (value: number) => void;
   toggleRepeat: () => void;

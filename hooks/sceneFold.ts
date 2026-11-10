@@ -24,13 +24,14 @@ export const wallOrigins = ({ seams }: SceneFold): [number, number][] => {
 };
 
 export const foldCamera = (fold: SceneFold, center: number): FoldCamera => {
-  const { seams, depth } = fold;
+  const { seams, depth, open } = fold;
   const total = seams[seams.length - 1];
   const origins = wallOrigins(fold);
-  const lap = Math.floor((center - depth) / total);
+  const lap = open ? 0 : Math.floor((center - depth) / total);
   const position = center - lap * total;
   const turn = lap * 360;
-  const turning = seams.findIndex((seam) => Math.abs(position - seam) < depth);
+  const corners = open ? seams.slice(0, -1) : seams;
+  const turning = corners.findIndex((seam) => Math.abs(position - seam) < depth);
   if (turning >= 0) {
     const seam = seams[turning];
     const [cornerX, cornerZ] = origins[turning + 1];

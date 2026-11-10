@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import { BOX_BORDER } from "@/hooks/panelRooms";
-import { PanelDictionary, RoomTile } from "@/types/panel";
+import { trackArt } from "@/hooks/trackArt";
+import { PanelDictionary, PanelLang, RoomTile } from "@/types/panel";
 
 const pct = (value: number, total: number): string => `${(value / total) * 100}%`;
 
@@ -10,10 +11,12 @@ export default function RoomsGrid({
   rooms,
   onOpen,
   t,
+  lang,
 }: {
   rooms: RoomTile[];
   onOpen: (room: RoomTile) => void;
   t: PanelDictionary;
+  lang: PanelLang;
 }) {
   return (
     <div
@@ -21,7 +24,9 @@ export default function RoomsGrid({
       style={{ top: "calc(3cqh + 5.6cqw)" }}
     >
       <div className="relative flex h-max w-full flex-row flex-wrap content-start justify-center gap-x-[3%] gap-y-[2.4cqh] px-[2%] py-[1.5cqh]">
-        {rooms.map((room, i) => (
+        {rooms.map((room, i) => {
+          const cover = trackArt(room.image, lang);
+          return (
           <button
             key={room.id}
             type="button"
@@ -42,12 +47,12 @@ export default function RoomsGrid({
                 height: pct(BOX_BORDER.hole.height, BOX_BORDER.height),
               }}
             >
-              {room.image && (
+              {cover && (
                 <Image
-                  src={room.image.src}
+                  src={cover.src}
                   alt=""
-                  width={room.image.width}
-                  height={room.image.height}
+                  width={cover.width}
+                  height={cover.height}
                   unoptimized
                   draggable={false}
                   className="pointer-events-none relative flex h-full w-full select-none object-cover"
@@ -65,7 +70,8 @@ export default function RoomsGrid({
               className="pointer-events-none relative flex h-full w-full select-none"
             />
           </button>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

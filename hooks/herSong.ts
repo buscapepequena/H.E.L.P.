@@ -44,7 +44,7 @@ const CALL: [number, number][] = [
 
 type Phrase = [number, number][];
 
-const sing = (
+export const sing = (
   ctx: BaseAudioContext,
   bus: AudioNode,
   noise: AudioBuffer,

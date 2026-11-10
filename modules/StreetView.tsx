@@ -4,6 +4,8 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useStreetView } from "@/hooks/useStreetView";
 import { SCENES, START_SCENE } from "@/hooks/scenes";
+import { localizedSrc } from "@/hooks/trackArt";
+import { PanelLang } from "@/types/panel";
 import SceneClock from "@/modules/SceneClock";
 import SceneCorner from "@/modules/SceneCorner";
 import SceneGlass from "@/modules/SceneGlass";
@@ -32,15 +34,24 @@ export default function StreetView({
   startId = START_SCENE,
   embedded = false,
   compact = false,
+  lang = "en",
   onEnter,
 }: {
   startId?: string;
   embedded?: boolean;
   compact?: boolean;
+  lang?: PanelLang;
   onEnter?: () => void;
 }) {
   const sv = useStreetView(SCENES, startId, onEnter);
   const transition = sv.transition;
+  const period = sv.scene.width * sv.scale;
+  const first = sv.scene.wrap && period ? Math.floor(-sv.view.x / period) - 1 : 0;
+  const last =
+    sv.scene.wrap && period
+      ? Math.floor((sv.size.width - sv.view.x) / period) + 1
+      : 0;
+  const copies = Array.from({ length: last - first + 1 }, (_, i) => first + i);
 
   return (
     <div
@@ -57,6 +68,7 @@ export default function StreetView({
         <SceneCorner
           scene={sv.scene}
           fold={sv.scene.fold}
+          lang={lang}
           view={sv.view}
           scale={sv.scale}
           size={sv.size}
@@ -74,32 +86,43 @@ export default function StreetView({
           opacity: sv.ready ? 1 : 0,
         }}
       >
-        {sv.scene.tiles.map((tile) => (
-          <Image
-            key={`${sv.scene.id}-${tile.src}`}
-            src={tile.src}
-            alt={sv.scene.title}
-            width={Math.round(tile.width)}
-            height={Math.round(tile.height)}
-            unoptimized
-            loading="eager"
-            fetchPriority="high"
-            draggable={false}
-            className="pointer-events-none absolute flex max-w-none"
-            style={{
-              left: tile.x,
-              top: tile.y,
-              width: tile.width,
-              height: tile.height,
-              ...(tile.fadeRight
-                ? {
-                    maskImage: `linear-gradient(to right, #000 calc(100% - ${tile.fadeRight}px), transparent 100%)`,
-                    WebkitMaskImage: `linear-gradient(to right, #000 calc(100% - ${tile.fadeRight}px), transparent 100%)`,
-                  }
-                : {}),
-            }}
-          />
-        ))}
+        {copies.flatMap((copy) =>
+          sv.scene.tiles.map((tile, index) => (
+            <div
+              key={`${sv.scene.id}-${tile.src}-${index}-${copy}`}
+              className="pointer-events-none absolute flex overflow-hidden"
+              style={{
+                left: tile.x + copy * sv.scene.width,
+                top: tile.y,
+                width: tile.span ?? tile.width - (tile.cropLeft ?? 0),
+                height: tile.height,
+              }}
+            >
+              <Image
+                src={localizedSrc(tile, lang) ?? tile.src}
+                alt={sv.scene.title}
+                width={Math.round(tile.width)}
+                height={Math.round(tile.height)}
+                unoptimized
+                loading="eager"
+                fetchPriority="high"
+                draggable={false}
+                className="pointer-events-none absolute top-0 flex max-w-none"
+                style={{
+                  left: -(tile.cropLeft ?? 0),
+                  width: tile.width,
+                  height: tile.height,
+                  ...(tile.fadeRight
+                    ? {
+                        maskImage: `linear-gradient(to right, #000 calc(100% - ${tile.fadeRight}px), transparent 100%)`,
+                        WebkitMaskImage: `linear-gradient(to right, #000 calc(100% - ${tile.fadeRight}px), transparent 100%)`,
+                      }
+                    : {}),
+                }}
+              />
+            </div>
+          )),
+        )}
         {sv.scene.stitches?.map((seam) => (
           <SceneStitches key={`${sv.scene.id}-stitch-${seam.x}`} seam={seam} />
         ))}
